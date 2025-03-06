@@ -58,6 +58,7 @@ export const updateProducts = async (updateImage: UpdateImage[]) => {
             body: JSON.stringify(update),
         })
         const data: any = await response.json()
+        console.log(data)
         return data
     } catch (error) {
         console.error(error)
