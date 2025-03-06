@@ -1,5 +1,6 @@
 import { Image } from '@/interfaces/image.interface'
 import { Product } from '@/interfaces/product.interface'
+import { splitArray } from '@/lib/segment-items'
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 
@@ -59,11 +60,14 @@ export const useImageSelection = (initialProducts: Product[]) => {
     const handleSubmit = async () => {
         try {
             setLoading(true)
-            const res = await fetch('/api/wordpress', {
-                method: 'POST',
-                body: JSON.stringify(productsAdded),
-            })
-            await res.json()
+            const splittedList = splitArray(productsAdded)
+            // se itera por grupos de 10 productos para no sobrecargar el servidor
+            for (const list of splittedList) {
+                await fetch('/api/wordpress', {
+                    method: 'POST',
+                    body: JSON.stringify(list),
+                })
+            }
             router.refresh()
         } catch (error) {
             console.log('falló al actualizar...')
