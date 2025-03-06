@@ -6,7 +6,11 @@ interface RequestBody {
     name: string
 }
 export const POST = async (req: NextRequest) => {
-    const { url, name }: RequestBody = await req.json()
-    const uploadedURL = await uploadToCDN(url, name)
-    return NextResponse.json({ url: uploadedURL })
+    try {
+        const { url, name }: RequestBody = await req.json()
+        const uploadedURL = await uploadToCDN(url, name)
+        return NextResponse.json({ url: uploadedURL })
+    } catch (error) {
+        return NextResponse.json({ error: true }, { status: 500 })
+    }
 }

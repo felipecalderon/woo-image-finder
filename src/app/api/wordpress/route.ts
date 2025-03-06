@@ -11,6 +11,5 @@ export const POST = async (req: NextRequest) => {
     const temProducts: TemporalList[] = await req.json()
     const toUpdate = temProducts.map((p) => ({ id: p.id, images: [{ src: p.image.imageUrl }] }))
     const updated = await updateProducts(toUpdate)
-    console.log(updated)
     return NextResponse.json(updated)
 }

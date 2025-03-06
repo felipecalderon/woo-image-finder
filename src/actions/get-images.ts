@@ -5,6 +5,11 @@ interface Searchs {
     q: string
 }
 
+interface ErrorMessage {
+    error: {
+        message: string
+    }
+}
 export const getImages = async (search: Searchs[]) => {
     const apikey = config.SERP_APIKEY
     if (!apikey) throw new Error('No hay apikey')
@@ -17,7 +22,7 @@ export const getImages = async (search: Searchs[]) => {
             },
             body: JSON.stringify(search),
         })
-        const data: Promise<ResponseAPI[]> = await response.json()
+        const data: Promise<ResponseAPI[] & [ErrorMessage]> = await response.json()
         return data
     } catch (error) {
         console.error({ error })

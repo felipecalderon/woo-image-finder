@@ -70,18 +70,22 @@ export default function TableProducts({ resultImages, meta, products }: Props) {
                         )}
                         <div>
                             <p className="text-sm font-semibold pt-2 pb-1">
-                                {p.image?.imageUrl && '✅'} {p.name}:
+                                {p.image?.imageUrl && '✅'} {p.sku} - {p.name}:
                             </p>
                         </div>
                         <div className="flex flex-row flex-wrap gap-2">
-                            {resultImages[i].images.map((image) => (
-                                <ImageThumbnail
-                                    key={image.imageUrl}
-                                    image={image}
-                                    isSelected={p.image?.imageUrl === image.imageUrl}
-                                    onClick={() => handleImageClick(i, image)}
-                                />
-                            ))}
+                            {resultImages[i].images.map((image) => {
+                                const isSelected = p.image?.thumbnailUrl === image.thumbnailUrl
+                                console.log(isSelected)
+                                return (
+                                    <div
+                                        key={image.imageUrl}
+                                        className={isSelected ? 'border-8 box-border rounded-xl  border-green-800' : ''}
+                                    >
+                                        <ImageThumbnail image={image} onClick={() => handleImageClick(i, image)} />
+                                    </div>
+                                )
+                            })}
                         </div>
                     </TableCell>
                 </TableRow>

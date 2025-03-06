@@ -13,6 +13,18 @@ export default async function Home({ searchParams }: Params) {
     const { data: products, meta } = await getProducts(page, pageSize)
     const titles = products.map((product) => ({ q: product.name, location: 'Chile', hl: 'es-419', num: 5 }))
     const resultSearchs = await getImages(titles) // siempre se dará que resultSearchs.length === products.length
+
+    const [{ error }] = resultSearchs
+    if (error) {
+        return (
+            <div className="flex flex-col items-center justify-center min-h-screen py-2 gap-2 z-10">
+                <h1 className="text-center text-3xl font-bold pb-1 pt-3">
+                    Mensaje de la API de Google: {error.message}
+                </h1>
+            </div>
+        )
+    }
+    console.log(resultSearchs[0])
     return (
         <div className="flex flex-col items-center justify-center min-h-screen py-2 gap-2 z-10">
             <h1 className="text-center text-3xl font-bold pb-1 pt-3">Productos sin imagen</h1>

@@ -3,6 +3,7 @@ import { Product } from '@/interfaces/product.interface'
 import { splitArray } from '@/lib/segment-items'
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
+import { toast } from 'sonner'
 
 interface TemporalList extends Product {
     image?: Image
@@ -21,37 +22,49 @@ export const useImageSelection = (initialProducts: Product[]) => {
         try {
             if (temporalList[index].loading) return // Si está cargando no hacer nada
 
-            // Obtener el item actual y determinar si ya estaba seleccionado
+            // Obtener el item actual
             const currentItem = temporalList[index]
-            const isAlreadySelected = currentItem.image?.imageUrl === selectedImage.imageUrl
 
             // Marcar la fila como cargando
             setTemporalList((prev) => prev.map((item, i) => (i === index ? { ...item, loading: true } : item)))
 
-            // Si no estaba seleccionada, procesamos la imagen de forma asíncrona
-            if (!isAlreadySelected) {
-                const sku = currentItem.sku
-                const res = await fetch('/api/upload', {
-                    method: 'POST',
-                    body: JSON.stringify({ url: selectedImage.imageUrl, name: sku }),
-                })
-                const cloudinaryURL: { url: string } = await res.json()
+            const sku = currentItem.sku
 
-                // Actualizamos el estado para hacer toggle (seleccionar/deseleccionar)
-                setTemporalList((prev) =>
+            // Cargar imagen a cloudinary
+            const res = await fetch('/api/upload', {
+                method: 'POST',
+                body: JSON.stringify({ url: selectedImage.imageUrl, name: sku }),
+            })
+            let cloudinaryURL: { url: string } = await res.json()
+
+            // Si falla cloudinary, retornar la imagen undefined
+            if (!res.ok) {
+                toast.error(`Error al subir la imagen de ${currentItem.name}...`, { duration: 5000 })
+                return setTemporalList((prev) =>
                     prev.map((item, i) =>
                         i === index
                             ? {
                                   ...item,
-                                  image: isAlreadySelected
-                                      ? undefined
-                                      : { ...selectedImage, imageUrl: cloudinaryURL.url },
+                                  image: undefined,
                                   loading: false,
                               }
                             : item
                     )
                 )
             }
+
+            // Actualizamos el estado para hacer toggle (seleccionar/deseleccionar)
+            setTemporalList((prev) =>
+                prev.map((item, i) =>
+                    i === index
+                        ? {
+                              ...item,
+                              image: { ...selectedImage, imageUrl: cloudinaryURL.url },
+                              loading: false,
+                          }
+                        : item
+                )
+            )
         } catch (error) {
             console.error('Error al procesar la imagen:', error)
         }
@@ -62,12 +75,17 @@ export const useImageSelection = (initialProducts: Product[]) => {
             setLoading(true)
             const splittedList = splitArray(productsAdded)
             // se itera por grupos de 10 productos para no sobrecargar el servidor
+            let i = 1
             for (const list of splittedList) {
+                toast(`Actualizando tanda ${i} de ${splittedList.length}`, { duration: 5000 })
                 await fetch('/api/wordpress', {
                     method: 'POST',
                     body: JSON.stringify(list),
                 })
+                i++
             }
+            toast.success('Actualización completa, espere que refresque el sitio...', { duration: 5000 })
+            i = 1
             router.refresh()
         } catch (error) {
             console.log('falló al actualizar...')

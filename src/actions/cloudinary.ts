@@ -21,5 +21,6 @@ export const uploadToCDN = async (imageUrl: string, fileName: string) => {
         return upload.secure_url
     } catch (error) {
         console.error('Error al subir la imagen:', error)
+        throw error
     }
 }
