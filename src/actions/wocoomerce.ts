@@ -1,6 +1,5 @@
 import { config } from '@/constants/env'
 import { ImageProduct, Product } from '@/interfaces/product.interface'
-import { convertToJpg } from '@/lib/convert-jpg'
 
 interface ResponseGeo {
     meta: {
