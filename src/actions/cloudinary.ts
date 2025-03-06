@@ -1,6 +1,5 @@
 import { config } from '@/constants/env'
 import { v2 as cloudinary } from 'cloudinary'
-// examplefile: https://dojiw2m9tvv09.cloudfront.net/73975/product/ele61080674.jpg
 
 export const uploadToCDN = async (imageUrl: string, fileName: string) => {
     cloudinary.config({

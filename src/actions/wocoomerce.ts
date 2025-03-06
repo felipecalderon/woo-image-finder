@@ -1,5 +1,5 @@
 import { config } from '@/constants/env'
-import { ImageProduct, Product } from '@/interfaces/product.interface'
+import { Product } from '@/interfaces/product.interface'
 
 interface ResponseGeo {
     meta: {
@@ -35,30 +35,19 @@ export const getProducts = async (page = '1', pageSize = '50') => {
 
 interface UpdateImage {
     id: number
-    images: [
-        {
-            id: number
-        }
-    ]
+    images: {
+        src: string
+    }[]
 }
 interface UpdateProducts {
     update: UpdateImage[]
 }
 
-export const updateProducts = async () => {
-    const updateExmple: UpdateProducts = {
-        update: [
-            {
-                id: 36178,
-                images: [
-                    {
-                        id: 37263,
-                    },
-                ],
-            },
-        ],
-    }
+export const updateProducts = async (updateImage: UpdateImage[]) => {
     try {
+        const update: UpdateProducts = {
+            update: updateImage,
+        }
         const url = 'https://www.geoconstructor.cl/wp-json/wc/v3/products/batch'
         const response = await fetch(url, {
             method: 'POST',
@@ -66,37 +55,12 @@ export const updateProducts = async () => {
                 'Content-Type': 'application/json',
                 Authorization: 'Basic ' + btoa(`${config.WP_CLIENT}:${config.WP_SECRET}`),
             },
-            body: JSON.stringify(updateExmple),
+            body: JSON.stringify(update),
         })
         const data: any = await response.json()
-        console.log({ response, data: data.update[0] })
         return data
     } catch (error) {
         console.error(error)
         throw new Error('Error al obtener productos')
     }
-}
-
-export const uploadImage = async (imageUrl: string, fileName: string) => {
-    // 1. Descargar la imagen como blob
-    const imageResponse = await fetch(imageUrl)
-    const imageBlob = await imageResponse.blob()
-
-    // 2. Convertir la imagen a JPG usando Canvas
-    // const jpgBlob = await convertToJpg(imageBlob)
-
-    // 3. Crear FormData para la subida
-    const formData = new FormData()
-    formData.append('file', imageBlob, `${fileName}.jpg`)
-
-    // 4. Subir la imagen a WordPress
-    const response = await fetch('https://www.geoconstructor.cl/wp-json/wp/v2/media', {
-        method: 'POST',
-        headers: {
-            Authorization: 'Basic ' + btoa(`Administrador:${config.WORDPRESS_PASSWORD}`),
-        },
-        body: formData,
-    })
-
-    return response.json()
 }

@@ -1,6 +1,7 @@
 import { Image } from '@/interfaces/image.interface'
 import { Product } from '@/interfaces/product.interface'
-import { useCallback, useState } from 'react'
+import { useRouter } from 'next/navigation'
+import { useState } from 'react'
 
 interface TemporalList extends Product {
     image?: Image
@@ -11,6 +12,9 @@ export const useImageSelection = (initialProducts: Product[]) => {
     const [temporalList, setTemporalList] = useState<TemporalList[]>(
         initialProducts.map((product) => ({ ...product, image: undefined, loading: false }))
     )
+    const [loading, setLoading] = useState(false)
+    const productsAdded = temporalList.filter((p) => p.image)
+    const router = useRouter()
 
     const handleImageClick = async (index: number, selectedImage: Image) => {
         try {
@@ -52,5 +56,21 @@ export const useImageSelection = (initialProducts: Product[]) => {
         }
     }
 
-    return { temporalList, handleImageClick }
+    const handleSubmit = async () => {
+        try {
+            setLoading(true)
+            const res = await fetch('/api/wordpress', {
+                method: 'POST',
+                body: JSON.stringify(productsAdded),
+            })
+            await res.json()
+            router.refresh()
+        } catch (error) {
+            console.log('falló al actualizar...')
+        } finally {
+            setLoading(false)
+        }
+    }
+
+    return { temporalList, handleImageClick, loading, setLoading, handleSubmit, productsAdded }
 }
