@@ -5,6 +5,7 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Mail, Lock, LogIn, UserPlus } from 'lucide-react'
 import Google from '@/components/ui/google-icon'
+import { toast } from 'sonner'
 
 export default function LoginForm() {
     const [email, setEmail] = useState('')
@@ -30,9 +31,16 @@ export default function LoginForm() {
         }
     }
 
+    useEffect(() => {
+        if (session?.user) {
+            toast.success('Sesión encontrada, redirigiendo...')
+            router.push('/dashboard')
+        }
+    }, [session])
+
     return (
         <div className="bg-white p-8 rounded-lg shadow-md w-full max-w-md">
-            <h2 className="text-2xl font-bold text-center text-gray-700 mb-6">Iniciar sesión</h2>
+            <h3 className="text-lg font-bold text-center text-gray-700 mb-6">Por seguridad debes iniciar sesión</h3>
             {error && <p className="text-red-500 text-sm text-center mb-4">{error}</p>}
             <form className="space-y-4" onSubmit={handleSubmit}>
                 <div className="relative">
