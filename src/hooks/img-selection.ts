@@ -2,7 +2,7 @@ import { Image } from '@/interfaces/image.interface'
 import { Product } from '@/interfaces/product.interface'
 import { splitArray } from '@/lib/segment-items'
 import { useRouter } from 'next/navigation'
-import { useState } from 'react'
+import { useCallback, useMemo, useState } from 'react'
 import { toast } from 'sonner'
 
 interface TemporalList extends Product {
@@ -15,84 +15,73 @@ export const useImageSelection = (initialProducts: Product[]) => {
         initialProducts.map((product) => ({ ...product, image: undefined, loading: false }))
     )
     const [loading, setLoading] = useState(false)
-    const productsAdded = temporalList.filter((p) => p.image)
     const router = useRouter()
 
-    const handleImageClick = async (index: number, selectedImage: Image) => {
-        try {
-            if (temporalList[index].loading) return // Si está cargando no hacer nada
+    // Memoizamos el filtro para evitar cálculos innecesarios
+    const productsAdded = useMemo(() => temporalList.filter((p) => p.image), [temporalList])
 
-            // Obtener el item actual
+    // Helper para actualizar un elemento específico en temporalList
+    const updateTemporalListItem = useCallback((index: number, update: Partial<TemporalList>) => {
+        setTemporalList((prev) => {
+            const updated = [...prev]
+            updated[index] = { ...updated[index], ...update }
+            return updated
+        })
+    }, [])
+
+    const handleImageClick = useCallback(
+        async (index: number, selectedImage: Image) => {
             const currentItem = temporalList[index]
+            if (currentItem.loading) return // Evitar doble click
 
-            // Marcar la fila como cargando
-            setTemporalList((prev) => prev.map((item, i) => (i === index ? { ...item, loading: true } : item)))
+            updateTemporalListItem(index, { loading: true })
 
-            const sku = currentItem.sku
+            try {
+                const res = await fetch('/api/upload', {
+                    method: 'POST',
+                    body: JSON.stringify({ url: selectedImage.imageUrl, name: currentItem.sku }),
+                })
+                const data = await res.json()
 
-            // Cargar imagen a cloudinary
-            const res = await fetch('/api/upload', {
-                method: 'POST',
-                body: JSON.stringify({ url: selectedImage.imageUrl, name: sku }),
-            })
-            let cloudinaryURL: { url: string } = await res.json()
+                if (!res.ok) {
+                    toast.error(`Error al subir la imagen de ${currentItem.name}...`, { duration: 5000 })
+                    updateTemporalListItem(index, { image: undefined, loading: false })
+                    return
+                }
 
-            // Si falla cloudinary, retornar la imagen undefined
-            if (!res.ok) {
-                toast.error(`Error al subir la imagen de ${currentItem.name}...`, { duration: 5000 })
-                return setTemporalList((prev) =>
-                    prev.map((item, i) =>
-                        i === index
-                            ? {
-                                  ...item,
-                                  image: undefined,
-                                  loading: false,
-                              }
-                            : item
-                    )
-                )
+                updateTemporalListItem(index, {
+                    image: { ...selectedImage, imageUrl: data.url },
+                    loading: false,
+                })
+            } catch (error) {
+                console.error('Error al procesar la imagen:', error)
+                toast.error(`Error inesperado al subir la imagen de ${currentItem.name}...`, { duration: 5000 })
+                updateTemporalListItem(index, { image: undefined, loading: false })
             }
+        },
+        [temporalList, updateTemporalListItem]
+    )
 
-            // Actualizamos el estado para hacer toggle (seleccionar/deseleccionar)
-            setTemporalList((prev) =>
-                prev.map((item, i) =>
-                    i === index
-                        ? {
-                              ...item,
-                              image: { ...selectedImage, imageUrl: cloudinaryURL.url },
-                              loading: false,
-                          }
-                        : item
-                )
-            )
-        } catch (error) {
-            console.error('Error al procesar la imagen:', error)
-        }
-    }
-
-    const handleSubmit = async () => {
+    const handleSubmit = useCallback(async () => {
+        setLoading(true)
         try {
-            setLoading(true)
             const splittedList = splitArray(productsAdded)
-            // se itera por grupos de 10 productos para no sobrecargar el servidor
-            let i = 1
-            for (const list of splittedList) {
-                toast(`Actualizando tanda ${i} de ${splittedList.length}`, { duration: 5000 })
+            for (let i = 0; i < splittedList.length; i++) {
+                toast(`Actualizando tanda ${i + 1} de ${splittedList.length}`, { duration: 5000 })
                 await fetch('/api/wordpress', {
                     method: 'POST',
-                    body: JSON.stringify(list),
+                    body: JSON.stringify(splittedList[i]),
                 })
-                i++
             }
             toast.success('Actualización completa, espere que refresque el sitio...', { duration: 5000 })
-            i = 1
             router.refresh()
         } catch (error) {
-            console.log('falló al actualizar...')
+            console.error('Fallo al actualizar:', error)
+            toast.error('Error al actualizar productos. Intente nuevamente.', { duration: 5000 })
         } finally {
             setLoading(false)
         }
-    }
+    }, [productsAdded, router])
 
     return { temporalList, handleImageClick, loading, setLoading, handleSubmit, productsAdded }
 }
