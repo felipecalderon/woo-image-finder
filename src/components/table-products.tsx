@@ -76,7 +76,6 @@ export default function TableProducts({ resultImages, meta, products }: Props) {
                         <div className="flex flex-row flex-wrap gap-2">
                             {resultImages[i].images.map((image) => {
                                 const isSelected = p.image?.thumbnailUrl === image.thumbnailUrl
-                                console.log(isSelected)
                                 return (
                                     <div
                                         key={image.imageUrl}
