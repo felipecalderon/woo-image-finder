@@ -10,7 +10,7 @@ type Params = {
 }
 
 export default async function Home({ searchParams }: Params) {
-    const { page = '1', pageSize = '50' } = await searchParams
+    const { page = '1', pageSize = '5' } = await searchParams
     const { data: products, meta } = await getProducts(page, pageSize)
     const titles = products.map((product) => ({ q: cleanText(product.name), location: 'Chile', hl: 'es-419', num: 5 }))
     const resultSearchs = await getImages(titles) // siempre se dará que resultSearchs.length === products.length

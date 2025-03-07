@@ -1,7 +1,7 @@
 'use client'
 
 import { signIn, useSession } from 'next-auth/react'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Mail, Lock, LogIn, UserPlus } from 'lucide-react'
 import Google from '@/components/ui/google-icon'
@@ -12,7 +12,7 @@ export default function LoginForm() {
     const [error, setError] = useState('')
     const router = useRouter()
     const { data: session } = useSession()
-    console.log(session)
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
         setError('')
@@ -26,7 +26,7 @@ export default function LoginForm() {
         if (res?.error) {
             setError('Credenciales incorrectas')
         } else {
-            router.push('/') // Redirigir tras login exitoso
+            router.push('/dashboard')
         }
     }
 

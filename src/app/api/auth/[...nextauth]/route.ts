@@ -3,7 +3,7 @@ import { Google } from '@/app/api/auth/providers/social'
 import credentials from '../providers/credentials'
 
 const handler = NextAuth({
-    providers: [credentials],
+    providers: [credentials, Google],
     secret: process.env.NEXTAUTH_SECRET,
     session: {
         strategy: 'jwt',
