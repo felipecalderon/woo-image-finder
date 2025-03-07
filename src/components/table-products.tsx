@@ -23,7 +23,6 @@ const wpUrl = process.env.NEXT_PUBLIC_WORDPRESS_URL || ''
 export default function TableProducts({ resultImages, meta, products }: Props) {
     const { temporalList, handleImageClick, handleSubmit, loading, setLoading, productsAdded } =
         useImageSelection(products)
-    console.log(temporalList[0])
     const [loadingAutomate, setLoadingAutomate] = useState(false)
     const automatizar = async () => {
         try {

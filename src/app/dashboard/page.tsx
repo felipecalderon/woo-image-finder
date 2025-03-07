@@ -2,19 +2,35 @@ import { getImages } from '@/actions/get-images'
 import { getProducts } from '@/actions/wocoomerce'
 import TableProducts from '@/components/table-products'
 import { cleanText } from '@/lib/clean-text'
-// import { tempResults } from '@/constants/temp-results'
 import Link from 'next/link'
+import { unstable_cache } from 'next/cache'
 
 type Params = {
     searchParams: Promise<{ page: string; pageSize: string }>
 }
 
+// Función cacheada con unstable_cache
+const getCachedImages = unstable_cache(
+    async (titles: Array<{ q: string; location: string; hl: string; num: number }>) => {
+        return await getImages(titles)
+    },
+    // Clave de caché, que puede incluir identificadores estáticos
+    ['getCachedImages']
+)
+
 export default async function Home({ searchParams }: Params) {
     const { page = '1', pageSize = '50' } = await searchParams
     const { data: products, meta } = await getProducts(page, pageSize)
-    const titles = products.map((product) => ({ q: cleanText(product.name), location: 'Chile', hl: 'es-419', num: 5 }))
-    const resultSearchs = await getImages(titles) // siempre se dará que resultSearchs.length === products.length
 
+    const titles = products.map((product) => ({
+        q: cleanText(product.name),
+        location: 'Chile',
+        hl: 'es-419',
+        num: 5,
+    }))
+
+    // versión cacheada de getImages
+    const resultSearchs = await getCachedImages(titles)
     const [{ error }] = resultSearchs
     if (error) {
         return (
