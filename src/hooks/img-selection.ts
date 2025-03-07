@@ -55,7 +55,7 @@ export const useImageSelection = (initialProducts: Product[]) => {
                 })
             } catch (error) {
                 console.error('Error al procesar la imagen:', error)
-                toast.error(`Error inesperado al subir la imagen de ${currentItem.name}...`, { duration: 5000 })
+                toast.error(`Error al subir la imagen de ${currentItem.name}...`, { duration: 5000 })
                 updateTemporalListItem(index, { image: undefined, loading: false })
             }
         },

@@ -6,7 +6,8 @@ import React, { useMemo, useState } from 'react'
 import { ImageThumbnail } from './ui/thumbnail'
 import { useImageSelection } from '@/hooks/img-selection'
 import { Image } from '@/interfaces/image.interface'
-import { LoaderCircle } from 'lucide-react'
+import { Bot, LoaderCircle, UploadCloud } from 'lucide-react'
+import Link from 'next/link'
 
 type Props = {
     resultImages: ResponseAPI[]
@@ -18,10 +19,11 @@ type Props = {
         pages: number
     }
 }
-
+const wpUrl = process.env.NEXT_PUBLIC_WORDPRESS_URL || ''
 export default function TableProducts({ resultImages, meta, products }: Props) {
     const { temporalList, handleImageClick, handleSubmit, loading, setLoading, productsAdded } =
         useImageSelection(products)
+    console.log(temporalList[0])
     const [loadingAutomate, setLoadingAutomate] = useState(false)
     const automatizar = async () => {
         try {
@@ -30,20 +32,12 @@ export default function TableProducts({ resultImages, meta, products }: Props) {
             for (const product of temporalList) {
                 const index = temporalList.findIndex((p) => p.id === product.id)
                 const esGeo = resultImages[index].images[0].imageUrl.includes('geoconstructor')
+                const [primeraImg, segundaImg] = resultImages[index].images
+                const selectedTempImage: Image = esGeo ? { ...segundaImg } : { ...primeraImg }
                 if (product.image) continue
                 const tempImage: Image = {
-                    domain: '',
+                    ...selectedTempImage,
                     imageUrl: esGeo ? resultImages[index].images[1].imageUrl : resultImages[index].images[0].imageUrl,
-                    imageWidth: 0,
-                    imageHeight: 0,
-                    link: '',
-                    position: 0,
-                    thumbnailHeight: 0,
-                    thumbnailUrl: '',
-                    thumbnailWidth: 0,
-                    title: '',
-                    googleUrl: '',
-                    source: '',
                 }
                 await handleImageClick(index, tempImage)
             }
@@ -70,7 +64,11 @@ export default function TableProducts({ resultImages, meta, products }: Props) {
                         )}
                         <div>
                             <p className="text-sm font-semibold pt-2 pb-1">
-                                {p.image?.imageUrl && '✅'} {p.sku} - {p.name}:
+                                {p.image?.imageUrl && '✅'} {p.sku} - {p.name}{' '}
+                                <Link href={`${wpUrl}/producto/${p.slug}`} target="_blank">
+                                    <span className="text-green-800">(LINK)</span>
+                                </Link>
+                                :
                             </p>
                         </div>
                         <div className="flex flex-row flex-wrap gap-2">
@@ -108,31 +106,35 @@ export default function TableProducts({ resultImages, meta, products }: Props) {
                 <TableBody>{tableRows}</TableBody>
             </Table>
             <button
-                className={`flex justify-center items-center gap-2 fixed bottom-4 right-4 bg-green-700 text-white font-bold py-2 px-4 rounded-md ${
+                className={`flex justify-center items-center gap-2 fixed bottom-4 right-4 bg-green-700 text-sm text-white font-bold py-2 px-2 rounded-md ${
                     loadingAutomate ? 'opacity-70' : ''
                 }`}
                 onClick={automatizar}
                 disabled={loadingAutomate}
             >
-                {loadingAutomate && (
+                {loadingAutomate ? (
                     <span className="text-sm font-semibold animate-spin">
                         <LoaderCircle />
                     </span>
+                ) : (
+                    <Bot />
                 )}
                 {loadingAutomate ? 'Automatizando...' : 'Automatizar selección'}
             </button>
             {productsAdded.length > 0 && (
                 <button
-                    className={`flex justify-center items-center gap-2 fixed bottom-4 right-56 bg-red-600 text-white font-bold py-2 px-4 rounded-md ${
+                    className={`flex justify-center items-center gap-2 fixed bottom-16 right-4 bg-sky-600 text-sm text-white font-bold py-2 px-2 rounded-md ${
                         loading || loadingAutomate ? 'opacity-70' : ''
                     }`}
                     onClick={handleSubmit}
                     disabled={loading || loadingAutomate}
                 >
-                    {loading && (
+                    {loading ? (
                         <span className="text-sm font-semibold animate-spin">
                             <LoaderCircle />
                         </span>
+                    ) : (
+                        <UploadCloud />
                     )}
                     {loading
                         ? 'Actualizando...'
