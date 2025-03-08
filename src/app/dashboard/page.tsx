@@ -20,7 +20,7 @@ const getCachedImages = unstable_cache(
 
 export default async function Home({ searchParams }: Params) {
     const { page = '1', pageSize = '50' } = await searchParams
-    const { data: products, meta } = await getProducts(page, pageSize)
+    const { products, meta } = await getProducts(page, pageSize)
 
     const titles = products.map((product) => ({
         q: cleanText(product.name),
@@ -52,9 +52,9 @@ export default async function Home({ searchParams }: Params) {
                     <Link href={`/dashboard/?page=${meta.page - 1}`} passHref>
                         <button
                             className={`px-4 py-2 rounded-lg text-white font-semibold transition-all duration-300 shadow-md
-                        ${meta.page > 1 ? 'bg-blue-600 hover:bg-blue-700' : 'bg-gray-400 cursor-not-allowed'}
+                        ${meta.isPrevPage ? 'bg-blue-600 hover:bg-blue-700' : 'bg-gray-400 cursor-not-allowed'}
                     `}
-                            disabled={meta.page <= 1}
+                            disabled={meta.isPrevPage}
                         >
                             ⬅ Anterior
                         </button>
@@ -63,7 +63,11 @@ export default async function Home({ searchParams }: Params) {
                     {/* Botón Siguiente */}
                     <Link href={`/dashboard/?page=${meta.page + 1}`} passHref>
                         <button
-                            className={`px-4 py-2 rounded-lg text-white font-semibold transition-all duration-300 shadow-md bg-blue-600 hover:bg-blue-700`}
+                            className={`px-4 py-2 rounded-lg text-white font-semibold transition-all duration-300 shadow-md bg-blue-600 hover:bg-blue-700
+                                ${
+                                    meta.isNextPage ? 'bg-blue-600 hover:bg-blue-700' : 'bg-gray-400 cursor-not-allowed'
+                                }`}
+                            disabled={meta.isPrevPage}
                         >
                             Siguiente ➡
                         </button>

@@ -108,7 +108,7 @@ export default function TableProducts({ resultImages, meta, products }: Props) {
                 <TableBody>{tableRows}</TableBody>
             </Table>
             <button
-                className={`flex justify-center items-center gap-2 fixed bottom-4 right-4 bg-green-700 text-sm text-white font-bold py-2 px-2 rounded-md ${
+                className={`flex justify-center items-center gap-2 fixed top-4 right-4 bg-green-700 text-sm text-white font-bold py-2 px-2 rounded-md ${
                     loadingAutomate ? 'opacity-70' : ''
                 }`}
                 onClick={automatizar}
@@ -125,7 +125,7 @@ export default function TableProducts({ resultImages, meta, products }: Props) {
             </button>
             {productsAdded.length > 0 && (
                 <button
-                    className={`flex justify-center items-center gap-2 fixed bottom-16 right-4 bg-sky-600 text-sm text-white font-bold py-2 px-2 rounded-md ${
+                    className={`flex justify-center items-center gap-2 fixed bottom-4 right-4 bg-sky-700 text-sm text-white font-bold py-2 px-2 rounded-md ${
                         loading || loadingAutomate ? 'opacity-70' : ''
                     }`}
                     onClick={handleSubmit}
@@ -140,7 +140,7 @@ export default function TableProducts({ resultImages, meta, products }: Props) {
                     )}
                     {loading
                         ? 'Actualizando...'
-                        : `Actualizar ${productsAdded.length > 1 ? ` ${productsAdded.length} productos` : 'producto'}`}
+                        : `Subir ${productsAdded.length > 1 ? ` ${productsAdded.length} productos` : 'producto'}`}
                 </button>
             )}
         </>

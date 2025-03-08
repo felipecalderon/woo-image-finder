@@ -7,6 +7,8 @@ interface ResponseGeo {
         pageSize: number
         total: number
         pages: number
+        isPrevPage: boolean
+        isNextPage: boolean
     }
     data: Product[]
 }
@@ -25,8 +27,8 @@ export const getProducts = async (page = '1', pageSize = '50') => {
                 'Content-Type': 'application/json',
             },
         })
-        const data: Promise<ResponseGeo> = await response.json()
-        return data
+        const data: ResponseGeo = await response.json()
+        return { products: data.data, meta: data.meta }
     } catch (error) {
         console.error(error)
         throw new Error('Error al obtener productos')
