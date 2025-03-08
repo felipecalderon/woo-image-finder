@@ -3,7 +3,7 @@ import { ResponseAPI } from '@/interfaces/common.interface'
 import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from './ui/table'
 import { Product } from '@/interfaces/product.interface'
 import React, { useMemo, useState } from 'react'
-import { ImageThumbnail } from './ui/thumbnail'
+import { ImageThumbnail } from '@/components/thumbnail'
 import { useImageSelection } from '@/hooks/img-selection'
 import { Image } from '@/interfaces/image.interface'
 import { Bot, LoaderCircle, UploadCloud } from 'lucide-react'
@@ -31,7 +31,9 @@ export default function TableProducts({ resultImages, meta, products }: Props) {
             for (const product of temporalList) {
                 const index = temporalList.findIndex((p) => p.id === product.id)
                 const esGeo = resultImages[index].images[0].imageUrl.includes('geoconstructor')
-                const [primeraImg, segundaImg] = resultImages[index].images
+                const imgs = resultImages[index].images
+                if (imgs.length === 0) continue
+                const [primeraImg, segundaImg] = imgs
                 const selectedTempImage: Image = esGeo ? { ...segundaImg } : { ...primeraImg }
                 if (product.image) continue
                 const tempImage: Image = {

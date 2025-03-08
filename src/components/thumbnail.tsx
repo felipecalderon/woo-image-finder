@@ -7,19 +7,38 @@ export const ImageThumbnail = memo(({ image, onClick }: { image: Image; onClick:
     const imgRef = useRef<HTMLImageElement>(null)
 
     useEffect(() => {
-        // Espera unos segundos para darle tiempo a cargar la imagen
-        const timer = setTimeout(() => {
-            if (imgRef.current) {
-                // Si la imagen terminó de cargar pero naturalWidth es 0, probablemente falló la carga
-                if (imgRef.current.complete && imgRef.current.naturalWidth === 0) {
-                    setShouldRender(false)
-                }
+        const imgElement = imgRef.current
+        if (!imgElement) return
+
+        const handleLoad = () => {
+            // Verificar si la imagen es válida incluso después de cargar
+            if (imgElement.naturalWidth === 0) {
+                setShouldRender(false)
             }
-        }, 3000) // Ajusta el tiempo según la latencia esperada
-        return () => clearTimeout(timer)
+        }
+
+        const handleError = () => {
+            setShouldRender(false)
+        }
+
+        // Agregar listeners de eventos
+        imgElement.addEventListener('load', handleLoad)
+        imgElement.addEventListener('error', handleError)
+
+        // Verificar si la imagen ya está cargada (cacheada)
+        if (imgElement.complete) {
+            handleLoad()
+        }
+
+        return () => {
+            // Limpiar listeners al desmontar o cambiar imagen
+            imgElement.removeEventListener('load', handleLoad)
+            imgElement.removeEventListener('error', handleError)
+        }
     }, [image.imageUrl])
 
     if (!shouldRender) return null
+
     return (
         <motion.div
             transition={{ type: 'spring', stiffness: 100, damping: 30 }}
@@ -42,6 +61,7 @@ export const ImageThumbnail = memo(({ image, onClick }: { image: Image; onClick:
                 width="100"
                 className={`transition duration-200 bg-white max-w-[100px] max-h-[100px] object-cover`}
                 alt="thumbnail"
+                loading="lazy" // Mejora adicional para carga diferida
             />
         </motion.div>
     )
