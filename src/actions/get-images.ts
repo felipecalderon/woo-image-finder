@@ -16,6 +16,7 @@ const apikey = config.SERP_APIKEY
 
 export const getImages = async (search: Searchs[]) => {
     if (!apikey) throw new Error('No hay apikey')
+    if (search.length === 0) return []
     try {
         const response = await fetch('https://google.serper.dev/images', {
             method: 'POST',
@@ -28,8 +29,7 @@ export const getImages = async (search: Searchs[]) => {
         const data: Promise<ResponseAPI[] & [ErrorMessage]> = await response.json()
         return data
     } catch (error) {
-        console.error({ error })
-        throw new Error('Error listar imágenes')
+        throw new Error('Error al listar imágenes')
     }
 }
 // Función cacheada con unstable_cache
@@ -37,6 +37,6 @@ export const getCachedImages = unstable_cache(
     async (titles: Array<{ q: string; location: string; hl: string; num: number }>) => {
         return await getImages(titles)
     },
-    // Clave de caché, que puede incluir identificadores estáticos
+    // Clave de caché, se actualiza si cambia la api
     [`cache-${apikey}`]
 )

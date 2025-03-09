@@ -116,23 +116,26 @@ export default function TableProducts({ resultImages, meta, products }: Props) {
         <>
             <Table className="overflow-hidden">
                 <TableCaption>
-                    {`Resultados: ${meta.pageSize} de ${meta.total} (Página ${meta.page}/${meta.pages})`}
+                    {`Resultados: ${resultImages.length} de ${meta.total} (Página ${meta.page}/${meta.pages})`}
                 </TableCaption>
                 <TableHeader>
                     <TableRow>
-                        <TableHead colSpan={2} className="text-center">
-                            Selecciona la imagen que mejor se adapte al producto <i>(puedes automatizar el proceso)</i>
+                        <TableHead colSpan={2} className="text-center pointer-events-none">
+                            {!resultImages.length
+                                ? 'Todos los productos están con sus respectivas fotos, ¡Felicitaciones!'
+                                : 'Selecciona la imagen que mejor se adapte al producto (puedes automatizar el proceso)'}
                         </TableHead>
                     </TableRow>
                 </TableHeader>
                 <TableBody>{tableRows}</TableBody>
             </Table>
+            {/* Botón para actualizar automáticamente */}
             <button
                 className={`flex justify-center items-center gap-2 fixed top-4 right-4 bg-green-700 text-sm text-white font-bold py-2 px-2 rounded-md ${
-                    loadingAutomate ? 'opacity-70' : ''
+                    loadingAutomate || loading || !resultImages.length ? 'opacity-70 pointer-events-none' : ''
                 }`}
                 onClick={automatizar}
-                disabled={loadingAutomate}
+                disabled={loadingAutomate || loading}
             >
                 {loadingAutomate ? (
                     <span className="text-sm font-semibold animate-spin">
@@ -143,10 +146,12 @@ export default function TableProducts({ resultImages, meta, products }: Props) {
                 )}
                 {loadingAutomate ? 'Automatizando...' : 'Automatizar selección'}
             </button>
+
+            {/* Botón para subir las fotos */}
             {productsAdded.length > 0 && (
                 <button
                     className={`flex justify-center items-center gap-2 fixed bottom-4 right-4 bg-sky-700 text-sm text-white font-bold py-2 px-2 rounded-md ${
-                        loading || loadingAutomate ? 'opacity-70' : ''
+                        loading || loadingAutomate ? 'opacity-70 pointer-events-none' : ''
                     }`}
                     onClick={handleSubmit}
                     disabled={loading || loadingAutomate}

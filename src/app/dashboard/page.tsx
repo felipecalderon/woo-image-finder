@@ -2,6 +2,7 @@ import { getCachedImages } from '@/actions/get-images'
 import { getProducts } from '@/actions/wocoomerce'
 import TableProducts from '@/components/table-products'
 import { cleanText } from '@/lib/clean-text'
+import { error } from 'console'
 import Link from 'next/link'
 
 type Params = {
@@ -21,12 +22,12 @@ export default async function Home({ searchParams }: Params) {
 
     // versión cacheada de getImages
     const resultSearchs = await getCachedImages(titles)
-    const [{ error }] = resultSearchs
-    if (error) {
+    const [res] = resultSearchs
+    if (res && res.error) {
         return (
             <div className="flex flex-col items-center justify-center py-2 gap-2 z-10">
                 <h1 className="text-center text-3xl font-bold pb-1 pt-3">
-                    Mensaje de la API de Google: {error.message}
+                    Mensaje de la API de Google: {res.error.message}
                 </h1>
             </div>
         )
@@ -39,29 +40,36 @@ export default async function Home({ searchParams }: Params) {
                 <TableProducts key={Date.now()} resultImages={resultSearchs} products={products} meta={meta} />
                 <div className="flex justify-center gap-4 py-6">
                     {/* Botón Anterior */}
-                    <Link href={`/dashboard/?page=${meta.page - 1}`} passHref>
+                    {meta.isPrevPage ? (
+                        <Link href={`/dashboard/?page=${meta.page - 1}`} passHref>
+                            <button className="px-4 py-2 rounded-lg text-white font-semibold transition-all duration-300 shadow-md bg-blue-600 hover:bg-blue-700">
+                                ⬅ Anterior
+                            </button>
+                        </Link>
+                    ) : (
                         <button
-                            className={`px-4 py-2 rounded-lg text-white font-semibold transition-all duration-300 shadow-md
-                        ${meta.isPrevPage ? 'bg-blue-600 hover:bg-blue-700' : 'bg-gray-400 cursor-not-allowed'}
-                    `}
-                            disabled={meta.isPrevPage}
+                            className="px-4 py-2 rounded-lg text-white font-semibold transition-all duration-300 shadow-md bg-gray-400 pointer-events-none"
+                            disabled
                         >
                             ⬅ Anterior
                         </button>
-                    </Link>
+                    )}
 
                     {/* Botón Siguiente */}
-                    <Link href={`/dashboard/?page=${meta.page + 1}`} passHref>
+                    {meta.isNextPage ? (
+                        <Link href={`/dashboard/?page=${meta.page + 1}`} passHref>
+                            <button className="px-4 py-2 rounded-lg text-white font-semibold transition-all duration-300 shadow-md bg-blue-600 hover:bg-blue-700">
+                                Siguiente ➡
+                            </button>
+                        </Link>
+                    ) : (
                         <button
-                            className={`px-4 py-2 rounded-lg text-white font-semibold transition-all duration-300 shadow-md bg-blue-600 hover:bg-blue-700
-                                ${
-                                    meta.isNextPage ? 'bg-blue-600 hover:bg-blue-700' : 'bg-gray-400 cursor-not-allowed'
-                                }`}
-                            disabled={meta.isPrevPage}
+                            className="px-4 py-2 rounded-lg text-white font-semibold transition-all duration-300 shadow-md bg-gray-400 pointer-events-none"
+                            disabled
                         >
                             Siguiente ➡
                         </button>
-                    </Link>
+                    )}
                 </div>
             </div>
         </div>
