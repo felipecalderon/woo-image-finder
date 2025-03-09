@@ -44,7 +44,7 @@ export default function TableProducts({ resultImages, meta, products }: Props) {
                 await handleImageClick(index, tempImage)
             }
         } catch (error) {
-            console.log('falló al automatizar..')
+            console.log('falló al automatizar..', error)
         } finally {
             setLoadingAutomate(false)
         }
