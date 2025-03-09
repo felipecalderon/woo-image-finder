@@ -24,33 +24,47 @@ export default function TableProducts({ resultImages, meta, products }: Props) {
     const { temporalList, handleImageClick, handleSubmit, loading, setLoading, productsAdded } =
         useImageSelection(products)
     const [loadingAutomate, setLoadingAutomate] = useState(false)
+
     const automatizar = async () => {
+        console.log('automatizando...')
+        setLoadingAutomate(true)
+
         try {
-            console.log('automatizando...')
-            setLoadingAutomate(true)
-            for (const product of temporalList) {
-                const index = temporalList.findIndex((p) => p.id === product.id)
-                if (!resultImages[index].images[0].imageUrl) continue
-                const esGeo = resultImages[index].images[0].imageUrl.includes('geoconstructor')
-                const imgs = resultImages[index].images
-                if (imgs.length === 0) continue
-                const [primeraImg, segundaImg] = imgs
-                const selectedTempImage: Image = esGeo ? { ...segundaImg } : { ...primeraImg }
-                if (product.image) continue
-                if (esGeo && !segundaImg) continue
-                if (!selectedTempImage.imageUrl) continue
-                const tempImage: Image = {
-                    ...selectedTempImage,
-                    imageUrl: esGeo ? resultImages[index].images[1].imageUrl : resultImages[index].images[0].imageUrl,
-                }
+            for (let index = 0; index < temporalList.length; index++) {
                 try {
+                    const product = temporalList[index]
+                    const images = resultImages[index]?.images
+
+                    // Validación en cascada con optional chaining
+                    if (!images?.[0]?.imageUrl) continue
+
+                    const [primeraImg, segundaImg] = images
+                    const esGeo = primeraImg.imageUrl.includes('geoconstructor')
+
+                    // Validar existencia de segunda imagen si es geo
+                    if (esGeo && !segundaImg?.imageUrl) continue
+
+                    // No procesar si ya tiene imagen
+                    if (product.image) continue
+
+                    // Seleccionar imagen adecuada
+                    const targetImage = esGeo ? segundaImg : primeraImg
+                    if (!targetImage?.imageUrl) continue
+
+                    // Preparar objeto imagen
+                    const tempImage: Image = {
+                        ...targetImage,
+                        imageUrl: targetImage.imageUrl,
+                    }
+
                     await handleImageClick(index, tempImage)
                 } catch (error) {
-                    console.log('No se pudo subir la imagen desde:', resultImages[index].images[0].imageUrl)
+                    console.error(`Error en item ${index}:`, error)
+                    continue
                 }
             }
         } catch (error) {
-            console.log('falló al automatizar..', error)
+            console.error('Error general inesperado:', error)
         } finally {
             setLoadingAutomate(false)
         }
