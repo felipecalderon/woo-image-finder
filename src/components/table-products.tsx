@@ -37,6 +37,7 @@ export default function TableProducts({ resultImages, meta, products }: Props) {
                 const selectedTempImage: Image = esGeo ? { ...segundaImg } : { ...primeraImg }
                 if (product.image) continue
                 if (esGeo && !segundaImg) continue
+                if (!selectedTempImage.imageUrl) continue
                 const tempImage: Image = {
                     ...selectedTempImage,
                     imageUrl: esGeo ? resultImages[index].images[1].imageUrl : resultImages[index].images[0].imageUrl,
