@@ -41,7 +41,11 @@ export default function TableProducts({ resultImages, meta, products }: Props) {
                     ...selectedTempImage,
                     imageUrl: esGeo ? resultImages[index].images[1].imageUrl : resultImages[index].images[0].imageUrl,
                 }
-                await handleImageClick(index, tempImage)
+                try {
+                    await handleImageClick(index, tempImage)
+                } catch (error) {
+                    console.log('No se pudo subir la imagen desde:', resultImages[index].images[0].imageUrl)
+                }
             }
         } catch (error) {
             console.log('falló al automatizar..', error)
