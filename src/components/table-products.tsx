@@ -30,6 +30,7 @@ export default function TableProducts({ resultImages, meta, products }: Props) {
             setLoadingAutomate(true)
             for (const product of temporalList) {
                 const index = temporalList.findIndex((p) => p.id === product.id)
+                if (!resultImages[index].images[0].imageUrl) continue
                 const esGeo = resultImages[index].images[0].imageUrl.includes('geoconstructor')
                 const imgs = resultImages[index].images
                 if (imgs.length === 0) continue
