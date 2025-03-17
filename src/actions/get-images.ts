@@ -38,5 +38,5 @@ export const getCachedImages = unstable_cache(
         return await getImages(titles)
     },
     // Clave de caché, se actualiza si cambia la api
-    [`cache-${apikey}`]
+    [`cache:${apikey}`]
 )
