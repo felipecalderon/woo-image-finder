@@ -27,6 +27,7 @@ export const getImages = async (search: Searchs[]) => {
             body: JSON.stringify(search),
         })
         const data: Promise<ResponseAPI[] & [ErrorMessage]> = await response.json()
+        console.log(data)
         return data
     } catch (error) {
         throw new Error('Error al listar imágenes')

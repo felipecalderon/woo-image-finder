@@ -10,7 +10,7 @@ type Params = {
 }
 
 export default async function Home({ searchParams }: Params) {
-    const { page = '1', pageSize = '50' } = await searchParams
+    const { page = '1', pageSize = '20' } = await searchParams
     const { products, meta } = await getProducts(page, pageSize)
 
     const titles = products.map((product) => ({
