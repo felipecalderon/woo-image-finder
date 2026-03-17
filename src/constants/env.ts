@@ -1,8 +1,8 @@
 const {
     SERP_APIKEY = '',
-    WP_CLIENT = '',
-    WP_SECRET = '',
-    WORDPRESS_PASSWORD = '',
+    EXTERNAL_API_URL = '',
+    AUTH_TOKEN = '',
+    COMPANY_TOKEN = '',
     CLOUDINARY_APIKEY = '',
     CLOUDINARY_APISECRET = '',
     CLOUDINARY_NAME = '',
@@ -11,9 +11,9 @@ const {
 
 export const config = {
     SERP_APIKEY,
-    WP_CLIENT,
-    WP_SECRET,
-    WORDPRESS_PASSWORD,
+    EXTERNAL_API_URL,
+    AUTH_TOKEN,
+    COMPANY_TOKEN,
     CLOUDINARY_APIKEY,
     CLOUDINARY_APISECRET,
     CLOUDINARY_NAME,

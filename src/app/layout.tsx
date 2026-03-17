@@ -18,7 +18,7 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
     title: 'Cargador imagenes automatizado',
     description:
-        'Vincula productos sin imagenes de tu wordpress con imágenes de Google basado en el nombre del producto',
+        'Vincula productos sin imagenes con imágenes de Google basado en el nombre del producto',
 }
 
 export default function RootLayout({
