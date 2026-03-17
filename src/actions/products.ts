@@ -69,7 +69,7 @@ export const getProducts = async (page = '1', pageSize = '20', search = '') => {
         }
 
         const payload: ExternalResponse = await response.json()
-        const data = payload.data?.products || payload.products || []
+        const data = payload.data?.products || []
         const rawMeta = payload.meta
 
         const meta: Meta = {
