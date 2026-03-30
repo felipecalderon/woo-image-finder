@@ -1,26 +1,28 @@
 'use client'
-import { ResponseAPI } from '@/interfaces/common.interface'
-import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from './ui/table'
-import { Product } from '@/interfaces/product.interface'
-import React, { useMemo, useState, useEffect } from 'react'
+
 import { ImageThumbnail } from '@/components/thumbnail'
+import { useImageSearch } from '@/hooks/image-search'
 import { useImageSelection } from '@/hooks/img-selection'
+import { buildProductImageSearchKey } from '@/lib/image-search-cache'
+import { cn } from '@/lib/utils'
 import { Image } from '@/interfaces/image.interface'
+import { Product } from '@/interfaces/product.interface'
 import {
     Bot,
     ChevronLeft,
     ChevronRight,
+    CheckCircle2,
+    Image as ImageIcon,
     LoaderCircle,
     Search,
     UploadCloud,
-    CheckCircle2,
-    Image as ImageIcon,
 } from 'lucide-react'
 import { useRouter } from 'next/navigation'
+import { useEffect, useMemo, useState } from 'react'
 import { useDebounce } from 'use-debounce'
-import { Input } from './ui/input'
 import { Button } from './ui/button'
-import { cn } from '@/lib/utils'
+import { Input } from './ui/input'
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from './ui/table'
 
 type Meta = {
     page: number
@@ -32,14 +34,15 @@ type Meta = {
 }
 
 type Props = {
-    resultImages: ResponseAPI[]
     products: Product[]
     meta: Meta
     search: string
 }
-export default function TableProducts({ resultImages, products, meta, search }: Props) {
-    const { temporalList, handleImageClick, handleSubmit, loading, setLoading, productsAdded } =
-        useImageSelection(products)
+
+export default function TableProducts({ products, meta, search }: Props) {
+    const { temporalList, handleImageClick, handleSubmit, loading, productsAdded } = useImageSelection(products)
+    const { searchResults, searchLoadingKeys, searchPending, fetchProductImages, fetchAllProductImages } =
+        useImageSearch(products)
     const [loadingAutomate, setLoadingAutomate] = useState(false)
     const router = useRouter()
     const [text, setText] = useState(search)
@@ -63,34 +66,28 @@ export default function TableProducts({ resultImages, products, meta, search }: 
     }
 
     const automatizar = async () => {
-        console.log('automatizando...')
         setLoadingAutomate(true)
 
         try {
             for (let index = 0; index < temporalList.length; index++) {
                 try {
                     const product = temporalList[index]
-                    const images = resultImages[index]?.images
+                    const imageSearch = await fetchProductImages(index)
+                    const images = imageSearch?.images
 
-                    // Validación en cascada con optional chaining
                     if (!images?.[0]?.imageUrl) continue
 
                     const [primeraImg, segundaImg] = images
                     const esGeo = primeraImg.imageUrl.includes('geoconstructor')
 
-                    // Validar existencia de segunda imagen si es geo
                     if (esGeo && !segundaImg?.imageUrl) continue
 
                     const hasExistingImage = Boolean(product.image?.url || product.url_image)
-
-                    // No procesar si ya tiene imagen
                     if (hasExistingImage) continue
 
-                    // Seleccionar imagen adecuada
                     const targetImage = esGeo ? segundaImg : primeraImg
                     if (!targetImage?.imageUrl) continue
 
-                    // Preparar objeto imagen
                     const tempImage: Image = {
                         ...targetImage,
                         imageUrl: targetImage.imageUrl,
@@ -113,13 +110,16 @@ export default function TableProducts({ resultImages, products, meta, search }: 
         () =>
             temporalList.map((p, i) => {
                 const currentImageUrl = p.image?.url || p.url_image || ''
+                const productKey = buildProductImageSearchKey(p)
+                const imageSearch = searchResults[productKey]
+                const images = imageSearch?.images ?? []
+                const isSearching = Boolean(searchLoadingKeys[productKey])
 
                 return (
                     <TableRow key={p.id} className="group transition-all hover:bg-slate-50/50">
                         <TableCell className="align-top border-r p-4 w-[350px] min-w-[350px]">
                             <div className="flex flex-col gap-4">
                                 <div className="flex items-start gap-3">
-                                    {/* Current Image */}
                                     <div className="relative group/img shrink-0">
                                         {currentImageUrl ? (
                                             <img
@@ -135,7 +135,6 @@ export default function TableProducts({ resultImages, products, meta, search }: 
                                         )}
                                     </div>
 
-                                    {/* Product Details */}
                                     <div className="flex-1 min-w-0 space-y-1">
                                         <div className="inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-semibold bg-slate-50 text-slate-500 mb-1">
                                             {p.code}
@@ -149,7 +148,6 @@ export default function TableProducts({ resultImages, products, meta, search }: 
                                     </div>
                                 </div>
 
-                                {/* Selected Image Status */}
                                 {p.selectedImage ? (
                                     <div className="mt-1 p-3 bg-green-50 border border-green-200 rounded-xl relative overflow-hidden animate-in fade-in slide-in-from-top-1">
                                         <div className="flex items-center gap-2 mb-2">
@@ -163,7 +161,7 @@ export default function TableProducts({ resultImages, products, meta, search }: 
                                         <div className="relative group/newimg">
                                             <img
                                                 src={p.selectedImage.imageUrl}
-                                                className="w-full h-32 object-cover rounded-lg border-2 border-green-500 shadow-md transition-transform hover:scale-[1.02] cursor-pointer"
+                                                className="w-full h-auto object-cover rounded-lg border-2 border-green-500 shadow-md transition-transform hover:scale-[1.02] cursor-pointer"
                                                 onClick={() => window.open(p.selectedImage?.imageUrl, '_blank')}
                                             />
                                             {p.loading && (
@@ -187,34 +185,71 @@ export default function TableProducts({ resultImages, products, meta, search }: 
                         </TableCell>
 
                         <TableCell className="align-top p-4">
-                            <div className="flex flex-col h-full">
-                                <div className="flex flex-row flex-wrap gap-3">
-                                    {resultImages[i]?.images?.map((image) => {
-                                        const isSelected = p.selectedImage?.thumbnailUrl === image.thumbnailUrl
-                                        return (
-                                            <div
-                                                key={image.imageUrl}
-                                                className={cn(
-                                                    'transition-all duration-300 rounded-xl',
-                                                    isSelected
-                                                        ? 'ring-4 ring-green-500 ring-offset-2 scale-95 shadow-lg'
-                                                        : 'hover:scale-105 active:scale-95',
-                                                )}
-                                            >
-                                                <ImageThumbnail
-                                                    image={image}
-                                                    onClick={() => handleImageClick(i, image)}
-                                                />
-                                            </div>
-                                        )
-                                    })}
+                            <div className="flex flex-col h-full gap-4">
+                                <div className="flex items-center justify-between gap-3">
+                                    <div className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+                                        Imágenes del producto
+                                    </div>
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={() => void fetchProductImages(i)}
+                                        disabled={isSearching || loadingAutomate || loading}
+                                        className="shrink-0"
+                                    >
+                                        {isSearching ? (
+                                            <LoaderCircle className="animate-spin h-4 w-4" />
+                                        ) : (
+                                            <ImageIcon className="h-4 w-4" />
+                                        )}
+                                        <span>{images.length > 0 ? 'Recargar' : 'Traer imágenes'}</span>
+                                    </Button>
                                 </div>
+
+                                {images.length > 0 ? (
+                                    <div className="flex flex-row flex-wrap gap-3">
+                                        {images.map((image) => {
+                                            const isSelected = p.selectedImage?.thumbnailUrl === image.thumbnailUrl
+                                            return (
+                                                <div
+                                                    key={image.imageUrl}
+                                                    className={cn(
+                                                        'transition-all duration-300 rounded-xl',
+                                                        isSelected
+                                                            ? 'ring-4 ring-green-500 ring-offset-2 scale-95 shadow-lg'
+                                                            : 'hover:scale-105 active:scale-95',
+                                                    )}
+                                                >
+                                                    <ImageThumbnail
+                                                        image={image}
+                                                        onClick={() => handleImageClick(i, image)}
+                                                    />
+                                                </div>
+                                            )
+                                        })}
+                                    </div>
+                                ) : (
+                                    <div className="min-h-[120px] rounded-xl border border-dashed bg-slate-50/80 px-4 py-6 text-sm text-slate-400 flex items-center justify-center text-center">
+                                        {isSearching
+                                            ? 'Buscando imágenes...'
+                                            : 'Presiona el botón para cargar solo las imágenes de este producto.'}
+                                    </div>
+                                )}
                             </div>
                         </TableCell>
                     </TableRow>
                 )
             }),
-        [temporalList, resultImages, handleImageClick],
+        [
+            fetchProductImages,
+            handleImageClick,
+            loading,
+            loadingAutomate,
+            searchLoadingKeys,
+            searchResults,
+            temporalList,
+        ],
     )
 
     return (
@@ -239,9 +274,25 @@ export default function TableProducts({ resultImages, products, meta, search }: 
                                 Actuales (sólo vigentes)
                             </TableHead>
                             <TableHead className="font-bold text-slate-700 uppercase text-[11px] tracking-wider">
-                                {!resultImages.length
-                                    ? 'Estado general'
-                                    : 'Resultados de GOOGLE: Clic sobre la imagen para marcarla'}
+                                <div className="flex items-center justify-between gap-3">
+                                    <span>Resultados de GOOGLE</span>
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={() => void fetchAllProductImages()}
+                                        disabled={
+                                            searchPending || loadingAutomate || loading || temporalList.length === 0
+                                        }
+                                    >
+                                        {searchPending ? (
+                                            <LoaderCircle className="animate-spin h-4 w-4" />
+                                        ) : (
+                                            <ImageIcon className="h-4 w-4" />
+                                        )}
+                                        <span>Extraer todas las imágenes</span>
+                                    </Button>
+                                </div>
                             </TableHead>
                         </TableRow>
                     </TableHeader>
@@ -251,9 +302,7 @@ export default function TableProducts({ resultImages, products, meta, search }: 
                         ) : (
                             <TableRow>
                                 <TableCell colSpan={2} className="h-32 text-center text-slate-400">
-                                    {!resultImages.length
-                                        ? 'Todos los productos están con sus respectivas fotos, ¡Felicitaciones!'
-                                        : 'No hay productos para mostrar'}
+                                    No hay productos para mostrar
                                 </TableCell>
                             </TableRow>
                         )}
@@ -292,10 +341,10 @@ export default function TableProducts({ resultImages, products, meta, search }: 
             <button
                 className={cn(
                     'flex justify-center items-center gap-2 fixed top-4 right-4 bg-green-600 hover:bg-green-700 text-white text-xs font-bold py-2.5 px-4 rounded-full shadow-lg transition-all active:scale-95 z-[60]',
-                    (loadingAutomate || loading || !resultImages.length) && 'opacity-50 pointer-events-none',
+                    (loadingAutomate || loading || searchPending) && 'opacity-50 pointer-events-none',
                 )}
                 onClick={automatizar}
-                disabled={loadingAutomate || loading}
+                disabled={loadingAutomate || loading || searchPending}
             >
                 {loadingAutomate ? <LoaderCircle className="animate-spin" size={16} /> : <Bot size={16} />}
                 <span>{loadingAutomate ? 'Automatizando...' : 'Automatizar selección'}</span>

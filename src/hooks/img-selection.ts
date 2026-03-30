@@ -2,7 +2,7 @@ import { Image } from '@/interfaces/image.interface'
 import { Product } from '@/interfaces/product.interface'
 import { splitArray } from '@/lib/segment-items'
 import { useRouter } from 'next/navigation'
-import { Dispatch, SetStateAction, useCallback, useMemo, useState } from 'react'
+import { Dispatch, SetStateAction, useCallback, useEffect, useMemo, useState } from 'react'
 import { toast } from 'sonner'
 
 interface TemporalList extends Product {
@@ -25,6 +25,10 @@ export const useImageSelection = (initialProducts: Product[]): ImageSelectionRes
     )
     const [loading, setLoading] = useState(false)
     const router = useRouter()
+
+    useEffect(() => {
+        setTemporalList(initialProducts.map((product) => ({ ...product, selectedImage: undefined, loading: false })))
+    }, [initialProducts])
 
     // Memoizamos el filtro para evitar cálculos innecesarios
     const productsAdded = useMemo(() => temporalList.filter((p) => p.selectedImage), [temporalList])

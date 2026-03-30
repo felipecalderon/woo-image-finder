@@ -4,6 +4,9 @@ import { unstable_cache } from 'next/cache'
 
 interface Searchs {
     q: string
+    location?: string
+    hl?: string
+    num?: number
 }
 
 interface ErrorMessage {
