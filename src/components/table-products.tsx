@@ -1,12 +1,14 @@
 'use client'
 
+import { getCategories } from '@/actions/categories'
 import { ImageThumbnail } from '@/components/thumbnail'
+import { PaginationMeta } from '@/interfaces/common.interface'
 import { useImageSearch } from '@/hooks/image-search'
 import { useImageSelection } from '@/hooks/img-selection'
 import { buildProductImageSearchKey } from '@/lib/image-search-cache'
 import { cn } from '@/lib/utils'
 import { Image } from '@/interfaces/image.interface'
-import { Product } from '@/interfaces/product.interface'
+import { Product, ProductCategory } from '@/interfaces/product.interface'
 import {
     Bot,
     ChevronLeft,
@@ -18,28 +20,33 @@ import {
     UploadCloud,
 } from 'lucide-react'
 import { useRouter } from 'next/navigation'
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState, useTransition } from 'react'
 import { useDebounce } from 'use-debounce'
 import { Button } from './ui/button'
 import { Input } from './ui/input'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from './ui/table'
 
-type Meta = {
-    page: number
-    pageSize: number
-    total: number
-    pages: number
-    isPrevPage: boolean
-    isNextPage: boolean
-}
-
 type Props = {
     products: Product[]
-    meta: Meta
+    meta: PaginationMeta
     search: string
+    categories: ProductCategory[]
+    categoriesLoading: boolean
+    categoriesMeta: PaginationMeta
+    categoryId: string
 }
 
-export default function TableProducts({ products, meta, search }: Props) {
+const sortCategories = (items: ProductCategory[]) => [...items].sort((a, b) => a.name.localeCompare(b.name, 'es'))
+
+export default function TableProducts({
+    products,
+    meta,
+    search,
+    categories,
+    categoriesLoading,
+    categoriesMeta,
+    categoryId,
+}: Props) {
     const { temporalList, handleImageClick, handleSubmit, loading, productsAdded } = useImageSelection(products)
     const { searchResults, searchLoadingKeys, searchPending, fetchProductImages, fetchAllProductImages } =
         useImageSearch(products)
@@ -47,16 +54,42 @@ export default function TableProducts({ products, meta, search }: Props) {
     const router = useRouter()
     const [text, setText] = useState(search)
     const [query] = useDebounce(text, 500)
+    const [selectedCategory, setSelectedCategory] = useState(categoryId)
+    const [categoryQuery, setCategoryQuery] = useState('')
+    const [categoryOpen, setCategoryOpen] = useState(false)
+    const categoryInputRef = useRef<HTMLInputElement>(null)
+    const [categoriesState, setCategoriesState] = useState(sortCategories(categories))
+    const [categoriesMetaState, setCategoriesMetaState] = useState(categoriesMeta)
+    const [isPending, startTransition] = useTransition()
+
+    useEffect(() => {
+        setCategoriesState(sortCategories(categories))
+        setCategoriesMetaState(categoriesMeta)
+    }, [categories, categoriesMeta])
+
+    useEffect(() => {
+        setSelectedCategory(categoryId)
+        const selected = categoriesState.find((category) => String(category.id) === String(categoryId))
+        setCategoryQuery(selected?.name ?? '')
+    }, [categoriesState, categoryId])
+
+    const updateParams = (updater: (params: URLSearchParams) => void) => {
+        const params = new URLSearchParams(window.location.search)
+        updater(params)
+        router.push(`?${params.toString()}`)
+    }
 
     useEffect(() => {
         if (query === search) return
 
-        const params = new URLSearchParams()
-        if (query) {
-            params.set('search', query)
-        }
-        params.set('page', '1') // Reset a pagina 1 al buscar
-        router.push(`?${params.toString()}`)
+        updateParams((params) => {
+            if (query) {
+                params.set('search', query)
+            } else {
+                params.delete('search')
+            }
+            params.set('page', '1')
+        })
     }, [query, router, search])
 
     const handlePageChange = (newPage: number) => {
@@ -64,6 +97,42 @@ export default function TableProducts({ products, meta, search }: Props) {
         params.set('page', newPage.toString())
         router.push(`?${params.toString()}`)
     }
+
+    const handleCategoryChange = (value: string) => {
+        setSelectedCategory(value)
+        updateParams((params) => {
+            if (value) {
+                params.set('category_id', value)
+            } else {
+                params.delete('category_id')
+            }
+            params.set('page', '1')
+        })
+    }
+
+    const clearCategory = () => handleCategoryChange('')
+
+    const handleCategoryPageChange = (newPage: number) => {
+        startTransition(async () => {
+            try {
+                const result = await getCategories(String(newPage))
+                setCategoriesState(sortCategories(result.data))
+                setCategoriesMetaState(result.meta)
+                setCategoryOpen(true)
+                categoryInputRef.current?.focus()
+            } catch (error) {
+                console.error('Error paginando categorías:', error)
+            }
+        })
+    }
+
+    const filteredCategories = useMemo(() => {
+        if (!categoryQuery) return categoriesState
+        const query = categoryQuery.toLowerCase()
+        return categoriesState.filter((category) => category.name.toLowerCase().includes(query))
+    }, [categoriesState, categoryQuery])
+
+    const categoriesBusy = categoriesLoading || isPending
 
     const automatizar = async () => {
         setLoadingAutomate(true)
@@ -121,6 +190,11 @@ export default function TableProducts({ products, meta, search }: Props) {
                             <div className="flex flex-col gap-4">
                                 <div className="flex items-start gap-3">
                                     <div className="relative group/img shrink-0">
+                                        <span
+                                            className={`${p.enabled ? 'bg-green-700' : 'bg-red-700'} absolute -top-2 -left-2 z-10 text-[10px] text-white px-1.5 py-0.5 rounded shadow-sm font-medium`}
+                                        >
+                                            {p.enabled ? 'Activado' : 'Desactivado'}
+                                        </span>
                                         {currentImageUrl ? (
                                             <img
                                                 src={currentImageUrl}
@@ -254,15 +328,133 @@ export default function TableProducts({ products, meta, search }: Props) {
 
     return (
         <div className="space-y-4">
-            <div className="flex items-center gap-2">
+            <div className="flex flex-col gap-2 md:flex-row md:items-center md:gap-3">
                 <div className="relative flex-1 max-w-sm">
                     <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
                     <Input
                         placeholder="Buscar productos..."
                         value={text}
                         onChange={(e) => setText(e.target.value)}
-                        className="pl-8"
+                        className="pl-8 bg-white"
                     />
+                </div>
+
+                <div className="flex flex-1 items-center gap-2">
+                    <div className="relative w-full min-w-[220px]">
+                        <Input
+                            ref={categoryInputRef}
+                            placeholder={categoriesBusy ? 'Cargando categorías...' : 'Buscar categoría...'}
+                            value={categoryQuery}
+                            onChange={(e) => {
+                                setCategoryQuery(e.target.value)
+                                setCategoryOpen(true)
+                            }}
+                            onFocus={() => setCategoryOpen(true)}
+                            onBlur={() => setCategoryOpen(false)}
+                            className="pr-8 bg-white"
+                            disabled={categoriesBusy}
+                            aria-label="Buscar categoría"
+                        />
+                        {categoriesBusy ? (
+                            <LoaderCircle className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 animate-spin text-slate-400" />
+                        ) : (
+                            <Search className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                        )}
+                        {categoryOpen && !categoriesBusy && (
+                            <div className="absolute z-30 mt-2 w-full max-h-64 overflow-hidden rounded-md border bg-white shadow-lg">
+                                <div className="max-h-52 overflow-auto">
+                                    <button
+                                        type="button"
+                                        className="w-full text-left px-3 py-2 text-sm hover:bg-slate-50"
+                                        onMouseDown={(event) => event.preventDefault()}
+                                        onClick={() => {
+                                            clearCategory()
+                                            setCategoryQuery('')
+                                        }}
+                                    >
+                                        Todas las categorías
+                                    </button>
+                                    {filteredCategories.length > 0 ? (
+                                        filteredCategories.map((category) => (
+                                            <button
+                                                key={category.id}
+                                                type="button"
+                                                className={cn(
+                                                    'w-full text-left px-3 py-2 text-sm hover:bg-slate-50',
+                                                    String(category.id) === String(selectedCategory) && 'bg-slate-100',
+                                                )}
+                                                onMouseDown={(event) => event.preventDefault()}
+                                                onClick={() => {
+                                                    handleCategoryChange(String(category.id))
+                                                    setCategoryQuery(category.name)
+                                                    setCategoryOpen(false)
+                                                    categoryInputRef.current?.blur()
+                                                }}
+                                            >
+                                                {category.name}
+                                            </button>
+                                        ))
+                                    ) : (
+                                        <div className="px-3 py-2 text-sm text-slate-400">Sin resultados</div>
+                                    )}
+                                </div>
+                                <div className="flex items-center justify-between border-t px-2 py-1 text-[11px] text-slate-500">
+                                    <span>
+                                        Página {categoriesMetaState.page} de {categoriesMetaState.pages}
+                                    </span>
+                                    <div className="flex items-center gap-1">
+                                        <button
+                                            type="button"
+                                            className={cn(
+                                                'rounded px-2 py-0.5 text-xs',
+                                                categoriesMetaState.isPrevPage
+                                                    ? 'hover:bg-slate-100 text-slate-700'
+                                                    : 'text-slate-300 cursor-not-allowed',
+                                            )}
+                                            onMouseDown={(event) => event.preventDefault()}
+                                            onClick={() =>
+                                                categoriesMetaState.isPrevPage &&
+                                                handleCategoryPageChange(categoriesMetaState.page - 1)
+                                            }
+                                            disabled={!categoriesMetaState.isPrevPage}
+                                        >
+                                            Anterior
+                                        </button>
+                                        <button
+                                            type="button"
+                                            className={cn(
+                                                'rounded px-2 py-0.5 text-xs',
+                                                categoriesMetaState.isNextPage
+                                                    ? 'hover:bg-slate-100 text-slate-700'
+                                                    : 'text-slate-300 cursor-not-allowed',
+                                            )}
+                                            onMouseDown={(event) => event.preventDefault()}
+                                            onClick={() =>
+                                                categoriesMetaState.isNextPage &&
+                                                handleCategoryPageChange(categoriesMetaState.page + 1)
+                                            }
+                                            disabled={!categoriesMetaState.isNextPage}
+                                        >
+                                            Siguiente
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                    {selectedCategory && !categoriesBusy && (
+                        <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => {
+                                clearCategory()
+                                setCategoryQuery('')
+                            }}
+                        >
+                            Limpiar
+                        </Button>
+                    )}
                 </div>
             </div>
 
@@ -271,7 +463,7 @@ export default function TableProducts({ products, meta, search }: Props) {
                     <TableHeader>
                         <TableRow className="bg-slate-50/50">
                             <TableHead className="w-[350px] font-bold text-slate-700 uppercase text-[11px] tracking-wider">
-                                Actuales (sólo vigentes)
+                                Productos Actuales
                             </TableHead>
                             <TableHead className="font-bold text-slate-700 uppercase text-[11px] tracking-wider">
                                 <div className="flex items-center justify-between gap-3">
