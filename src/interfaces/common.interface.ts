@@ -13,3 +13,12 @@ export interface ResponseAPI {
     images: Image[]
     credits?: number
 }
+
+export interface PaginationMeta {
+    page: number
+    pageSize: number
+    total: number
+    pages: number
+    isPrevPage: boolean
+    isNextPage: boolean
+}

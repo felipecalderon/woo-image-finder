@@ -1,4 +1,5 @@
 import { config } from '@/constants/env'
+import { PaginationMeta } from '@/interfaces/common.interface'
 import { Product } from '@/interfaces/product.interface'
 
 interface ExternalMeta {
@@ -19,15 +20,6 @@ interface ExternalResponse {
     meta?: ExternalMeta
 }
 
-type Meta = {
-    page: number
-    pageSize: number
-    total: number
-    pages: number
-    isPrevPage: boolean
-    isNextPage: boolean
-}
-
 const buildHeaders = () => {
     if (!config.AUTH_TOKEN || !config.COMPANY_TOKEN) {
         throw new Error('Faltan credenciales de la API externa')
@@ -40,7 +32,7 @@ const buildHeaders = () => {
     }
 }
 
-export const getProducts = async (page = '1', pageSize = '20', search = '') => {
+export const getProducts = async (page = '1', pageSize = '20', search = '', categoryId = '') => {
     try {
         if (!config.EXTERNAL_API_URL) {
             throw new Error('Falta EXTERNAL_API_URL')
@@ -48,6 +40,7 @@ export const getProducts = async (page = '1', pageSize = '20', search = '') => {
 
         const url = new URL(`${config.EXTERNAL_API_URL}/api/v1/productos`)
         if (search) url.searchParams.set('query', search)
+        if (categoryId) url.searchParams.set('category_id', categoryId)
         url.searchParams.set('page', page)
 
         const response = await fetch(url.toString(), {
@@ -72,7 +65,7 @@ export const getProducts = async (page = '1', pageSize = '20', search = '') => {
         const data = payload.data?.products || []
         const rawMeta = payload.meta
 
-        const meta: Meta = {
+        const meta: PaginationMeta = {
             page: Number(rawMeta?.current_page ?? page),
             pageSize: Number(pageSize) || data.length,
             total: Number(rawMeta?.total_count ?? data.length),
