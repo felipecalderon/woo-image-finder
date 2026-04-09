@@ -467,7 +467,7 @@ export default function TableProducts({
                             <TableHead className="font-bold text-slate-700 uppercase text-[11px] tracking-wider">
                                 <div className="flex items-center justify-between gap-3">
                                     <span>Resultados de GOOGLE</span>
-                                    <Button
+                                    {/* <Button
                                         type="button"
                                         variant="outline"
                                         size="sm"
@@ -482,7 +482,7 @@ export default function TableProducts({
                                             <ImageIcon className="h-4 w-4" />
                                         )}
                                         <span>Extraer todas las imágenes</span>
-                                    </Button>
+                                    </Button> */}
                                 </div>
                             </TableHead>
                         </TableRow>
