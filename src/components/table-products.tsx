@@ -18,6 +18,7 @@ import {
     LoaderCircle,
     Search,
     UploadCloud,
+    Link,
 } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { useEffect, useMemo, useRef, useState, useTransition } from 'react'
@@ -186,14 +187,12 @@ export default function TableProducts({
 
                 return (
                     <TableRow key={p.id} className="group transition-all hover:bg-slate-50/50">
-                        <TableCell className="align-top border-r p-4 w-[350px] min-w-[350px]">
+                        <TableCell className="align-top border-r p-4 pt-6 w-[350px] min-w-[350px]">
                             <div className="flex flex-col gap-4">
                                 <div className="flex items-start gap-3">
                                     <div className="relative group/img shrink-0">
-                                        <span
-                                            className={`${p.enabled ? 'bg-green-700' : 'bg-red-700'} absolute -top-2 -left-2 z-10 text-[10px] text-white px-1.5 py-0.5 rounded shadow-sm font-medium`}
-                                        >
-                                            {p.enabled ? 'Activado' : 'Desactivado'}
+                                        <span className="bg-green-700 absolute -top-2 -left-2 z-10 text-[9px] text-white px-1.5 py-0.5 rounded shadow-sm font-medium">
+                                            {p.category?.name ?? 'Sin categoría'}
                                         </span>
                                         {currentImageUrl ? (
                                             <img
@@ -494,7 +493,10 @@ export default function TableProducts({
                         ) : (
                             <TableRow>
                                 <TableCell colSpan={2} className="h-32 text-center text-slate-400">
-                                    No hay productos para mostrar
+                                    <p>
+                                        Se buscó {query.toUpperCase()} {categoryQuery ? `en ${categoryQuery}` : ''}
+                                    </p>
+                                    <p>No hay productos aquí :(</p>
                                 </TableCell>
                             </TableRow>
                         )}
