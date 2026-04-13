@@ -27,7 +27,7 @@ export default async function Home({ searchParams }: Params) {
         <div className="flex flex-col items-center justify-center py-2 gap-2 z-10">
             <h1 className="text-center text-3xl font-bold pb-1 pt-3">Productos sin imagen</h1>
             <h3 className="text-center text-xl italic pb-3">Carga manual con caché por producto</h3>
-            <div className="px-6 mx-auto">
+            <div className="mx-auto w-full px-4 sm:px-6">
                 <TableProducts
                     key={`${meta.page}-${search}-${category_id}`}
                     products={products}

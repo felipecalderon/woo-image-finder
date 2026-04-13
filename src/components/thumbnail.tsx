@@ -48,7 +48,7 @@ export const ImageThumbnail = memo(({ image, onClick }: { image: Image; onClick:
                 border: '2px solid #bae6fd',
                 backgroundColor: 'white',
             }}
-            className={`relative w-[100px] h-[100px] overflow-hidden rounded-lg hover:cursor-pointer`}
+            className="relative h-24 w-24 overflow-hidden rounded-lg hover:cursor-pointer sm:h-[100px] sm:w-[100px]"
             onClick={onClick}
         >
             <span className="text-xs scale-75 font-bold absolute -top-1 left-1/2 -translate-x-1/2 px-2 py-1 bg-white/70 rounded-s-lg">
@@ -59,7 +59,7 @@ export const ImageThumbnail = memo(({ image, onClick }: { image: Image; onClick:
                 src={image.imageUrl}
                 height="100"
                 width="100"
-                className={`transition duration-200 bg-white max-w-[100px] max-h-[100px] object-cover`}
+                className="h-full w-full bg-white object-cover transition duration-200"
                 alt="thumbnail"
                 loading="lazy" // Mejora adicional para carga diferida
             />

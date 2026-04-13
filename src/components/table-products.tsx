@@ -1,7 +1,8 @@
 'use client'
 
 import { getCategories } from '@/actions/categories'
-import { ImageThumbnail } from '@/components/thumbnail'
+import { ProductDesktopRow } from '@/components/table-products/product-desktop-row'
+import { ProductMobileCard } from '@/components/table-products/product-mobile-card'
 import { PaginationMeta } from '@/interfaces/common.interface'
 import { useImageSearch } from '@/hooks/image-search'
 import { useImageSelection } from '@/hooks/img-selection'
@@ -13,12 +14,9 @@ import {
     Bot,
     ChevronLeft,
     ChevronRight,
-    CheckCircle2,
-    Image as ImageIcon,
     LoaderCircle,
     Search,
     UploadCloud,
-    Link,
 } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { useEffect, useMemo, useRef, useState, useTransition } from 'react'
@@ -49,8 +47,7 @@ export default function TableProducts({
     categoryId,
 }: Props) {
     const { temporalList, handleImageClick, handleSubmit, loading, productsAdded } = useImageSelection(products)
-    const { searchResults, searchLoadingKeys, searchPending, fetchProductImages, fetchAllProductImages } =
-        useImageSearch(products)
+    const { searchResults, searchLoadingKeys, searchPending, fetchProductImages } = useImageSearch(products)
     const [loadingAutomate, setLoadingAutomate] = useState(false)
     const router = useRouter()
     const [text, setText] = useState(search)
@@ -176,7 +173,7 @@ export default function TableProducts({
         }
     }
 
-    const tableRows = useMemo(
+    const desktopRows = useMemo(
         () =>
             temporalList.map((p, i) => {
                 const currentImageUrl = p.image?.url || p.url_image || ''
@@ -186,132 +183,53 @@ export default function TableProducts({
                 const isSearching = Boolean(searchLoadingKeys[productKey])
 
                 return (
-                    <TableRow key={p.id} className="group transition-all hover:bg-slate-50/50">
-                        <TableCell className="align-top border-r p-4 pt-6 w-[350px] min-w-[350px]">
-                            <div className="flex flex-col gap-4">
-                                <div className="flex items-start gap-3">
-                                    <div className="relative group/img shrink-0">
-                                        <span className="bg-green-700 absolute -top-2 -left-2 z-10 text-[9px] text-white px-1.5 py-0.5 rounded shadow-sm font-medium">
-                                            {p.category?.name ?? 'Sin categoría'}
-                                        </span>
-                                        {currentImageUrl ? (
-                                            <img
-                                                src={currentImageUrl}
-                                                className="w-32 h-32 object-cover rounded-lg border shadow-sm bg-white"
-                                                alt={p.name}
-                                            />
-                                        ) : (
-                                            <div className="w-32 h-32 bg-slate-100 flex flex-col items-center justify-center rounded-lg border border-dashed text-slate-400 text-[10px] gap-1">
-                                                <ImageIcon size={20} />
-                                                <span>Sin imagen</span>
-                                            </div>
-                                        )}
-                                    </div>
+                    <ProductDesktopRow
+                        key={p.id}
+                        index={i}
+                        product={p}
+                        currentImageUrl={currentImageUrl}
+                        images={images}
+                        isSearching={isSearching}
+                        loadingAutomate={loadingAutomate}
+                        loading={loading}
+                        onFetchImages={fetchProductImages}
+                        onSelectImage={handleImageClick}
+                    />
+                )
+            }),
+        [
+            fetchProductImages,
+            handleImageClick,
+            loading,
+            loadingAutomate,
+            searchLoadingKeys,
+            searchResults,
+            temporalList,
+        ],
+    )
 
-                                    <div className="flex-1 min-w-0 space-y-1">
-                                        <div className="inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-semibold bg-slate-50 text-slate-500 mb-1">
-                                            {p.code}
-                                        </div>
-                                        <h3
-                                            className="text-sm font-bold text-slate-900 leading-tight line-clamp-3"
-                                            title={p.name}
-                                        >
-                                            {p.name}
-                                        </h3>
-                                    </div>
-                                </div>
+    const mobileCards = useMemo(
+        () =>
+            temporalList.map((p, i) => {
+                const currentImageUrl = p.image?.url || p.url_image || ''
+                const productKey = buildProductImageSearchKey(p)
+                const imageSearch = searchResults[productKey]
+                const images = imageSearch?.images ?? []
+                const isSearching = Boolean(searchLoadingKeys[productKey])
 
-                                {p.selectedImage ? (
-                                    <div className="mt-1 p-3 bg-green-50 border border-green-200 rounded-xl relative overflow-hidden animate-in fade-in slide-in-from-top-1">
-                                        <div className="flex items-center gap-2 mb-2">
-                                            <div className="bg-green-500 rounded-full p-0.5 text-white">
-                                                <CheckCircle2 size={12} />
-                                            </div>
-                                            <span className="text-[11px] font-bold text-green-700 uppercase tracking-wider">
-                                                Nueva seleccionada
-                                            </span>
-                                        </div>
-                                        <div className="relative group/newimg">
-                                            <img
-                                                src={p.selectedImage.imageUrl}
-                                                className="w-full h-auto object-cover rounded-lg border-2 border-green-500 shadow-md transition-transform hover:scale-[1.02] cursor-pointer"
-                                                onClick={() => window.open(p.selectedImage?.imageUrl, '_blank')}
-                                            />
-                                            {p.loading && (
-                                                <div className="absolute inset-0 bg-white/60 backdrop-blur-[1px] flex items-center justify-center z-20">
-                                                    <LoaderCircle className="animate-spin text-green-700" size={24} />
-                                                </div>
-                                            )}
-                                        </div>
-                                    </div>
-                                ) : (
-                                    p.loading && (
-                                        <div className="p-3 bg-blue-50 border border-blue-200 rounded-xl flex items-center justify-center gap-2">
-                                            <LoaderCircle className="animate-spin text-blue-700" size={16} />
-                                            <span className="text-xs font-medium text-blue-700">
-                                                Subiendo imagen...
-                                            </span>
-                                        </div>
-                                    )
-                                )}
-                            </div>
-                        </TableCell>
-
-                        <TableCell className="align-top p-4">
-                            <div className="flex flex-col h-full gap-4">
-                                <div className="flex items-center justify-between gap-3">
-                                    <div className="text-xs font-semibold uppercase tracking-wider text-slate-500">
-                                        Imágenes del producto
-                                    </div>
-                                    <Button
-                                        type="button"
-                                        variant="outline"
-                                        size="sm"
-                                        onClick={() => void fetchProductImages(i)}
-                                        disabled={isSearching || loadingAutomate || loading}
-                                        className="shrink-0"
-                                    >
-                                        {isSearching ? (
-                                            <LoaderCircle className="animate-spin h-4 w-4" />
-                                        ) : (
-                                            <ImageIcon className="h-4 w-4" />
-                                        )}
-                                        <span>{images.length > 0 ? 'Recargar' : 'Traer imágenes'}</span>
-                                    </Button>
-                                </div>
-
-                                {images.length > 0 ? (
-                                    <div className="flex flex-row flex-wrap gap-3">
-                                        {images.map((image) => {
-                                            const isSelected = p.selectedImage?.thumbnailUrl === image.thumbnailUrl
-                                            return (
-                                                <div
-                                                    key={image.imageUrl}
-                                                    className={cn(
-                                                        'transition-all duration-300 rounded-xl',
-                                                        isSelected
-                                                            ? 'ring-4 ring-green-500 ring-offset-2 scale-95 shadow-lg'
-                                                            : 'hover:scale-105 active:scale-95',
-                                                    )}
-                                                >
-                                                    <ImageThumbnail
-                                                        image={image}
-                                                        onClick={() => handleImageClick(i, image)}
-                                                    />
-                                                </div>
-                                            )
-                                        })}
-                                    </div>
-                                ) : (
-                                    <div className="min-h-[120px] rounded-xl border border-dashed bg-slate-50/80 px-4 py-6 text-sm text-slate-400 flex items-center justify-center text-center">
-                                        {isSearching
-                                            ? 'Buscando imágenes...'
-                                            : 'Presiona el botón para cargar solo las imágenes de este producto.'}
-                                    </div>
-                                )}
-                            </div>
-                        </TableCell>
-                    </TableRow>
+                return (
+                    <ProductMobileCard
+                        key={p.id}
+                        index={i}
+                        product={p}
+                        currentImageUrl={currentImageUrl}
+                        images={images}
+                        isSearching={isSearching}
+                        loadingAutomate={loadingAutomate}
+                        loading={loading}
+                        onFetchImages={fetchProductImages}
+                        onSelectImage={handleImageClick}
+                    />
                 )
             }),
         [
@@ -328,7 +246,7 @@ export default function TableProducts({
     return (
         <div className="space-y-4">
             <div className="flex flex-col gap-2 md:flex-row md:items-center md:gap-3">
-                <div className="relative flex-1 max-w-sm">
+                <div className="relative w-full flex-1 max-w-none md:max-w-sm">
                     <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
                     <Input
                         placeholder="Buscar productos..."
@@ -338,8 +256,8 @@ export default function TableProducts({
                     />
                 </div>
 
-                <div className="flex flex-1 items-center gap-2">
-                    <div className="relative w-full min-w-[220px]">
+                <div className="flex flex-col gap-2 sm:flex-row sm:items-center md:flex-1 md:gap-2">
+                    <div className="relative w-full min-w-0 md:min-w-[220px]">
                         <Input
                             ref={categoryInputRef}
                             placeholder={categoriesBusy ? 'Cargando categorías...' : 'Buscar categoría...'}
@@ -457,7 +375,7 @@ export default function TableProducts({
                 </div>
             </div>
 
-            <div className="rounded-xl border shadow-sm overflow-hidden bg-white">
+            <div className="overflow-hidden rounded-xl border bg-white shadow-sm md:block hidden">
                 <Table>
                     <TableHeader>
                         <TableRow className="bg-slate-50/50">
@@ -488,8 +406,8 @@ export default function TableProducts({
                         </TableRow>
                     </TableHeader>
                     <TableBody>
-                        {tableRows.length > 0 ? (
-                            tableRows
+                        {desktopRows.length > 0 ? (
+                            desktopRows
                         ) : (
                             <TableRow>
                                 <TableCell colSpan={2} className="h-32 text-center text-slate-400">
@@ -504,12 +422,25 @@ export default function TableProducts({
                 </Table>
             </div>
 
+            <div className="space-y-4 md:hidden">
+                {mobileCards.length > 0 ? (
+                    mobileCards
+                ) : (
+                    <div className="rounded-xl border bg-white p-6 text-center text-slate-400 shadow-sm">
+                        <p>
+                            Se buscó {query.toUpperCase()} {categoryQuery ? `en ${categoryQuery}` : ''}
+                        </p>
+                        <p>No hay productos aquí :(</p>
+                    </div>
+                )}
+            </div>
+
             {/* Paginación */}
-            <div className="flex items-center justify-between py-4">
+            <div className="flex flex-col gap-3 py-4 sm:flex-row sm:items-center sm:justify-between">
                 <div className="text-sm text-muted-foreground">
                     Página {meta.page} de {meta.pages} ({meta.total} productos)
                 </div>
-                <div className="flex items-center space-x-2">
+                <div className="flex items-center gap-2">
                     <Button
                         variant="outline"
                         size="sm"
@@ -534,7 +465,7 @@ export default function TableProducts({
             {/* Botón para actualizar automáticamente */}
             <button
                 className={cn(
-                    'flex justify-center items-center gap-2 fixed top-4 right-4 bg-green-600 hover:bg-green-700 text-white text-xs font-bold py-2.5 px-4 rounded-full shadow-lg transition-all active:scale-95 z-[60]',
+                    'fixed right-3 top-3 z-[60] flex items-center justify-center gap-2 rounded-full bg-green-600 px-3 py-2 text-xs font-bold text-white shadow-lg transition-all active:scale-95 hover:bg-green-700 sm:right-4 sm:top-4 sm:px-4 sm:py-2.5',
                     (loadingAutomate || loading || searchPending) && 'opacity-50 pointer-events-none',
                 )}
                 onClick={automatizar}
@@ -548,7 +479,7 @@ export default function TableProducts({
             {productsAdded.length > 0 && (
                 <button
                     className={cn(
-                        'flex justify-center items-center gap-2 fixed bottom-6 right-6 bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold py-3 px-6 rounded-full shadow-2xl transition-all active:scale-95 z-[60] border-2 border-white',
+                        'fixed bottom-3 left-3 right-3 z-[60] flex items-center justify-center gap-2 rounded-full border-2 border-white bg-blue-600 px-4 py-3 text-sm font-bold text-white shadow-2xl transition-all active:scale-95 hover:bg-blue-700 sm:left-auto sm:right-4 sm:bottom-6 sm:w-auto sm:px-6',
                         (loading || loadingAutomate) && 'opacity-50 pointer-events-none',
                     )}
                     onClick={handleSubmit}
