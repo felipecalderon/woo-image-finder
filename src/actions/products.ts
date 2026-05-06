@@ -82,13 +82,23 @@ export const getProducts = async (page = '1', pageSize = '20', search = '', cate
 }
 
 type UpdateProductPayload = {
-    name?: string
-    category_id?: number | null
-    product_type?: number
-    is_tax?: boolean
-    currency?: number
+    name: string
+    enabled?: boolean
+    category_id: number
+    product_type: number
+    is_tax: boolean
+    currency: number
     code?: string
-    price?: number
+    description?: string
+    is_variant?: boolean
+    is_profit?: boolean
+    unit_cost?: number
+    price: number
+    is_weight_barcode?: boolean
+    barcode?: string
+    type_code?: string
+    unit_item?: string
+    sii_tax_id?: number
     image?: string
 }
 
@@ -100,15 +110,24 @@ export const updateProductImage = async (productId: number, payload: UpdateProdu
 
         const url = `${config.EXTERNAL_API_URL}/api/v1/productos/${productId}`
         const body = new URLSearchParams()
-        if (payload.name) body.set('name', payload.name)
-        if (payload.category_id !== undefined && payload.category_id !== null) {
-            body.set('category_id', String(payload.category_id))
-        }
-        if (payload.product_type) body.set('product_type', String(payload.product_type))
-        if (payload.is_tax !== undefined) body.set('is_tax', String(payload.is_tax))
-        if (payload.currency) body.set('currency', String(payload.currency))
-        if (payload.code) body.set('code', payload.code)
-        if (payload.price !== undefined && payload.price !== null) body.set('price', String(payload.price))
+        body.set('name', payload.name)
+        body.set('category_id', String(payload.category_id))
+        body.set('product_type', String(payload.product_type))
+        body.set('is_tax', String(payload.is_tax))
+        body.set('currency', String(payload.currency))
+        body.set('price', String(payload.price))
+
+        if (payload.enabled !== undefined) body.set('enabled', String(payload.enabled))
+        if (payload.code !== undefined) body.set('code', payload.code)
+        if (payload.description !== undefined) body.set('description', payload.description)
+        if (payload.is_variant !== undefined) body.set('is_variant', String(payload.is_variant))
+        if (payload.is_profit !== undefined) body.set('is_profit', String(payload.is_profit))
+        if (payload.unit_cost !== undefined) body.set('unit_cost', String(payload.unit_cost))
+        if (payload.is_weight_barcode !== undefined) body.set('is_weight_barcode', String(payload.is_weight_barcode))
+        if (payload.barcode !== undefined) body.set('barcode', payload.barcode)
+        if (payload.type_code !== undefined) body.set('type_code', payload.type_code)
+        if (payload.unit_item !== undefined) body.set('unit_item', payload.unit_item)
+        if (payload.sii_tax_id !== undefined) body.set('sii_tax_id', String(payload.sii_tax_id))
         if (payload.image) body.set('image', payload.image)
         const response = await fetch(url, {
             method: 'PUT',

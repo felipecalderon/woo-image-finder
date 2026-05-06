@@ -31,6 +31,14 @@ export interface Product {
     product_type?: string
     is_tax?: boolean
     currency?: string
+    is_variant?: boolean
+    is_profit?: boolean
+    unit_cost?: number
+    barcode?: string
+    type_code?: string
+    unit_item?: string
+    sii_tax_id?: number
+    is_weight_barcode?: boolean
     image?: ProductImage | null
     url_image?: string | null
     category?: ProductCategory | null

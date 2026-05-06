@@ -1,0 +1,429 @@
+{
+    "/api/v1/productos": {
+        "post": {
+            "summary": "Crea un nuevo producto",
+            "description": "Crea un nuevo producto",
+            "produces": ["application/json"],
+            "consumes": ["application/json"],
+            "parameters": [
+                {
+                    "in": "header",
+                    "name": "Authorization",
+                    "description": "Token de usuario",
+                    "type": "string",
+                    "required": true
+                },
+                {
+                    "in": "header",
+                    "name": "Company",
+                    "description": "Token de contribuyente (empresa)",
+                    "type": "string",
+                    "required": true
+                },
+                {
+                    "name": "ApiV1Productos",
+                    "in": "body",
+                    "required": true,
+                    "schema": {
+                        "$ref": "#/definitions/postApiV1Productos"
+                    }
+                }
+            ],
+            "responses": {
+                "200": {
+                    "description": "success"
+                },
+                "201": {
+                    "description": "Crea un nuevo producto"
+                },
+                "422": {
+                    "description": "Detail error messages"
+                }
+            },
+            "tags": ["productos"],
+            "operationId": "postApiV1Productos"
+        },
+        "get": {
+            "summary": "Obtiene todos los productos de una empresa",
+            "description": "Obtiene todos los productos de una empresa",
+            "produces": ["application/json"],
+            "parameters": [
+                {
+                    "in": "header",
+                    "name": "Authorization",
+                    "description": "Token de usuario",
+                    "type": "string",
+                    "required": true
+                },
+                {
+                    "in": "header",
+                    "name": "Company",
+                    "description": "Token de contribuyente (empresa)",
+                    "type": "string",
+                    "required": true
+                },
+                {
+                    "in": "query",
+                    "name": "query",
+                    "description": "query",
+                    "type": "string",
+                    "required": false
+                },
+                {
+                    "in": "query",
+                    "name": "page",
+                    "description": "page",
+                    "type": "integer",
+                    "format": "int32",
+                    "required": false
+                },
+                {
+                    "in": "query",
+                    "name": "tax_exempt",
+                    "description": "Solo exentos",
+                    "type": "boolean",
+                    "required": false
+                },
+                {
+                    "in": "query",
+                    "name": "category_id",
+                    "description": "ID categoría",
+                    "type": "integer",
+                    "format": "int32",
+                    "required": false
+                }
+            ],
+            "responses": {
+                "200": {
+                    "description": "success"
+                },
+                "403": {
+                    "description": "403 Forbidden"
+                }
+            },
+            "tags": ["productos"],
+            "operationId": "getApiV1Productos"
+        }
+    },
+    "/api/v1/productos/{product_id}": {
+        "get": {
+            "summary": "Obtiene un producto",
+            "description": "Obtiene un producto",
+            "produces": ["application/json"],
+            "parameters": [
+                {
+                    "in": "header",
+                    "name": "Authorization",
+                    "description": "Token de usuario",
+                    "type": "string",
+                    "required": true
+                },
+                {
+                    "in": "header",
+                    "name": "Company",
+                    "description": "Token de contribuyente (empresa)",
+                    "type": "string",
+                    "required": true
+                },
+                {
+                    "in": "path",
+                    "name": "product_id",
+                    "description": "ID Producto",
+                    "type": "integer",
+                    "format": "int32",
+                    "required": true
+                }
+            ],
+            "responses": {
+                "200": {
+                    "description": "success"
+                },
+                "404": {
+                    "description": "Resource can not be found"
+                }
+            },
+            "tags": ["productos"],
+            "operationId": "getApiV1ProductosProductId"
+        },
+        "delete": {
+            "summary": "Elimina un producto",
+            "description": "Elimina un producto",
+            "produces": ["application/json"],
+            "parameters": [
+                {
+                    "in": "path",
+                    "name": "product_id",
+                    "description": "ID Producto",
+                    "type": "integer",
+                    "format": "int32",
+                    "required": true
+                }
+            ],
+            "responses": {
+                "204": {
+                    "description": "Elimina un producto"
+                }
+            },
+            "tags": ["productos"],
+            "operationId": "deleteApiV1ProductosProductId"
+        },
+        "put": {
+            "summary": "Actualiza un producto",
+            "description": "Actualiza un producto",
+            "produces": ["application/json"],
+            "consumes": ["application/json"],
+            "parameters": [
+                {
+                    "in": "path",
+                    "name": "product_id",
+                    "description": "ID Producto",
+                    "type": "integer",
+                    "format": "int32",
+                    "required": true
+                },
+                {
+                    "in": "formData",
+                    "name": "name",
+                    "description": "Nombre del producto",
+                    "type": "string",
+                    "required": true
+                },
+                {
+                    "in": "formData",
+                    "name": "enabled",
+                    "description": "Vigente",
+                    "type": "boolean",
+                    "required": false
+                },
+                {
+                    "in": "formData",
+                    "name": "code",
+                    "description": "Código o SKU",
+                    "type": "string",
+                    "required": false
+                },
+                {
+                    "in": "formData",
+                    "name": "description",
+                    "description": "Descripción",
+                    "type": "string",
+                    "required": false
+                },
+                {
+                    "in": "formData",
+                    "name": "category_id",
+                    "description": "ID Categoría",
+                    "type": "integer",
+                    "format": "int32",
+                    "required": true
+                },
+                {
+                    "in": "formData",
+                    "name": "product_type",
+                    "description": "Tipo de producto (producto: 1, servicio: 2)",
+                    "type": "integer",
+                    "format": "int32",
+                    "required": true
+                },
+                {
+                    "in": "formData",
+                    "name": "is_tax",
+                    "description": "Producto se encuentra afecto a IVA",
+                    "type": "boolean",
+                    "required": true
+                },
+                {
+                    "in": "formData",
+                    "name": "is_variant",
+                    "description": "Producto contiene variantes",
+                    "type": "boolean",
+                    "required": false
+                },
+                {
+                    "in": "formData",
+                    "name": "is_profit",
+                    "description": "Considerar en el margen de ventas",
+                    "type": "boolean",
+                    "required": false
+                },
+                {
+                    "in": "formData",
+                    "name": "currency",
+                    "description": "Moneda (pesos: 1, uf: 2)",
+                    "type": "integer",
+                    "format": "int32",
+                    "required": true
+                },
+                {
+                    "in": "formData",
+                    "name": "unit_cost",
+                    "description": "Costo unitario",
+                    "type": "number",
+                    "format": "float",
+                    "required": false
+                },
+                {
+                    "in": "formData",
+                    "name": "price",
+                    "description": "Precio neto (sin impuestos)",
+                    "type": "number",
+                    "format": "float",
+                    "required": true
+                },
+                {
+                    "in": "formData",
+                    "name": "is_weight_barcode",
+                    "description": "Habilitar código de barra compuesto (Código SKU + PESO)",
+                    "type": "boolean",
+                    "required": false
+                },
+                {
+                    "in": "formData",
+                    "name": "barcode",
+                    "description": "Código de barra",
+                    "type": "string",
+                    "required": false
+                },
+                {
+                    "in": "formData",
+                    "name": "type_code",
+                    "description": "Tipo de código (Información agregada en el tag <UnmdItem> del XML generado al momento de emitir un documento enviado al SII)",
+                    "type": "string",
+                    "required": false
+                },
+                {
+                    "in": "formData",
+                    "name": "unit_item",
+                    "description": "Unidad de medida (Información agregada en el tag <UnmdItem> del XML generado al momento de emitir un documento enviado al SII)",
+                    "type": "string",
+                    "required": false
+                },
+                {
+                    "in": "formData",
+                    "name": "sii_tax_id",
+                    "description": "ID Impuestos adicionales (SII)",
+                    "type": "integer",
+                    "format": "int32",
+                    "required": false
+                },
+                {
+                    "in": "formData",
+                    "name": "image",
+                    "description": "Imagén (URL, solo .png .jpg .jpeg)",
+                    "type": "string",
+                    "required": false
+                },
+                {
+                    "in": "formData",
+                    "name": "variants[variant_id]",
+                    "description": "ID Variante",
+                    "type": "array",
+                    "items": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "required": false
+                },
+                {
+                    "in": "formData",
+                    "name": "variants[name]",
+                    "description": "Nombre variente",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "required": true
+                },
+                {
+                    "in": "formData",
+                    "name": "variants[code]",
+                    "description": "Código o SKU",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "required": false
+                },
+                {
+                    "in": "formData",
+                    "name": "variants[barcode]",
+                    "description": "Código de barra",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "required": false
+                },
+                {
+                    "in": "formData",
+                    "name": "variants[price]",
+                    "description": "Precio neto (sin impuestos)",
+                    "type": "array",
+                    "items": {
+                        "type": "number",
+                        "format": "float"
+                    },
+                    "required": true
+                },
+                {
+                    "in": "formData",
+                    "name": "variants[unit_cost]",
+                    "description": "Costo unitario",
+                    "type": "array",
+                    "items": {
+                        "type": "number",
+                        "format": "float"
+                    },
+                    "required": false
+                },
+                {
+                    "in": "formData",
+                    "name": "variants[description]",
+                    "description": "Descripción de la variante",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "required": false
+                },
+                {
+                    "in": "formData",
+                    "name": "variants[image]",
+                    "description": "Imagén (URL, solo .png .jpg .jpeg)",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "required": false
+                },
+                {
+                    "in": "formData",
+                    "name": "variants[enabled]",
+                    "description": "Vigente",
+                    "type": "array",
+                    "items": {
+                        "type": "boolean"
+                    },
+                    "required": false
+                },
+                {
+                    "in": "formData",
+                    "name": "variants[destroy]",
+                    "description": "Eliminar variante",
+                    "type": "array",
+                    "items": {
+                        "type": "boolean"
+                    },
+                    "required": false
+                }
+            ],
+            "responses": {
+                "200": {
+                    "description": "Actualiza un producto"
+                }
+            },
+            "tags": ["productos"],
+            "operationId": "putApiV1ProductosProductId"
+        }
+    }
+}
